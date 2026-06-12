@@ -1,4 +1,5 @@
-import { VW, VH, PX, WORLD, GOAL, DAY_NUM } from './engine/constants.js';
+import { VW, VH, PX, WORLD, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
+import { buildSheets } from './render/sheet.js';
 import { R, RI, clamp } from './engine/utils.js';
 import { audio, startMusic, toggleMusic, sfx, iceCreamTruck } from './audio/synth.js';
 import { keys, setupKeyboard } from './engine/input.js';
@@ -95,6 +96,7 @@ export function update(){
   if(ml > 0){
     player.anim += spd*.045;
     if(Math.abs(mx) > .2) player.face = mx >= 0 ? 1 : -1;
+    if(USE_SHEETS) player.dir = Math.abs(my) > Math.abs(mx) ? (my > 0 ? 0 : 3) : (mx >= 0 ? 2 : 1);
     if(frame % 9 === 0 && player.hop === 0) parts.push({x:player.x-mx*8, y:player.y+8, vx:0, vy:0, l:10, c:"rgba(205,184,160,.5)", s:PX});
   }
 
@@ -145,10 +147,12 @@ export function update(){
         n.x += dx*n.spd; n.y += dy*n.spd;
         n.anim += n.spd*.06;
         if(Math.abs(dx) > .2) n.face = dx >= 0 ? 1 : -1;
+        if(USE_SHEETS) n.dir = Math.abs(dy) > Math.abs(dx) ? (dy > 0 ? 0 : 3) : (dx >= 0 ? 2 : 1);
       }
     } else {
       n.anim += .04;
       n.face = player.x >= n.x ? 1 : -1;
+      if(USE_SHEETS) n.dir = player.x >= n.x ? 2 : 1;
     }
   }
 
@@ -237,6 +241,7 @@ export function init(){
   initDraw(ctx, cam);
 
   buildMap(); bakeGround(); bakeMini(); resetRun();
+  if(USE_SHEETS) buildSheets();
 
   setupKeyboard(
     () => { state === "run" ? tryHop() : start(); },

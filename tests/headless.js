@@ -106,7 +106,7 @@ const required = [
   'src/entities/npcs.js', 'src/entities/pickups.js',
   'src/entities/player.js', 'src/entities/dog.js',
   'src/render/draw.js', 'src/render/props.js',
-  'src/render/sprites.js', 'src/render/lighting.js',
+  'src/render/sheet.js', 'src/render/sprites.js', 'src/render/lighting.js',
   'src/ui/hud.js', 'src/ui/overlays.js',
 ];
 for(const f of required){
