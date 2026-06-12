@@ -68,9 +68,9 @@ try {
 
   if(getState() !== 'run') errors.push('State should be "run" after startRun()');
 
-  // Phase 1: run north-east toward goal area (30 sec)
+  // Phase 1: run north from SPAWN (4096,7680) through neighbourhood toward park (30 sec)
   keys.KeyW = true;
-  keys.KeyD = true;
+  keys.KeyD = false;
   for(let i = 0; i < 1800; i++) stepFrame();
 
   // Phase 2: sprint for 5 sec
@@ -78,15 +78,15 @@ try {
   for(let i = 0; i < 300; i++) stepFrame();
   keys.ShiftLeft = false;
 
-  // Phase 3: teleport near NAPS[0] {x:2450, y:1950} to wake Biscuit (10 sec)
+  // Phase 3: teleport near NAPS[0] {x:3700, y:6550} (Biscuit's doghouse) to wake dog
   // Place player 200px west — within the 240px wake radius
-  player.x = 2250; player.y = 1950;
+  player.x = 3500; player.y = 6550;
   keys.KeyA = true; keys.KeyW = false; keys.KeyD = false; // run west (away from dog)
   for(let i = 0; i < 600; i++) stepFrame();
   keys.KeyA = false;
 
-  // Phase 4: continue north toward goal if still running (45 sec)
-  player.x = 1950; player.y = 1200;
+  // Phase 4: teleport to park area, run north through school to goal (45 sec)
+  player.x = 4096; player.y = 3000;
   keys.KeyW = true; keys.KeyD = false;
   for(let i = 0; i < 2700; i++) stepFrame();
 

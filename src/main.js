@@ -4,6 +4,7 @@ import { R, RI, clamp } from './engine/utils.js';
 import { audio, startMusic, toggleMusic, sfx, iceCreamTruck } from './audio/synth.js';
 import { keys, setupKeyboard } from './engine/input.js';
 import { walls, canopies, lamps, buildMap } from './world/map.js';
+import { regionAt } from './world/tiledata.js';
 import { initChunks, drawChunks, evictChunks } from './world/chunks.js';
 import { buildGrid } from './engine/spatialgrid.js';
 import { bakeMini } from './world/minimap.js';
@@ -23,6 +24,7 @@ let cv, ctx;
 const cam = { x:0, y:0 };
 let state = "title", frame = 0, time = 0, pops = 0, best = 0, missionT = 0;
 let pickups = [], parts = [], npcs = [], flies = [];
+let regionName = null, bannerT = 0;
 let joy = null, sprintHeld = false;
 
 function fit(){
@@ -100,6 +102,11 @@ export function update(){
     if(USE_SHEETS) player.dir = Math.abs(my) > Math.abs(mx) ? (my > 0 ? 0 : 3) : (mx >= 0 ? 2 : 1);
     if(frame % 9 === 0 && player.hop === 0) parts.push({x:player.x-mx*8, y:player.y+8, vx:0, vy:0, l:10, c:"rgba(205,184,160,.5)", s:PX});
   }
+
+  /* region banner */
+  const nr = regionAt(player.x, player.y);
+  if(nr !== regionName){ regionName = nr; if(nr) bannerT = 240; }
+  if(bannerT > 0) bannerT--;
 
   /* goal check */
   if((player.x-GOAL.x)**2 + (player.y-GOAL.y)**2 < GOAL.r*GOAL.r) return endRun(true);
@@ -188,11 +195,11 @@ export function draw(){
   drawChunks(ctx, cam.x, cam.y);
   evictChunks(cam.x, cam.y);
 
-  /* pond shimmer */
-  if(inView(840, 1060, 420, 280)){
+  /* pond shimmer (park pond: centre 4000,2600) */
+  if(inView(3764, 2470, 472, 260)){
     for(let i=0;i<7;i++){
-      const sx = 1050 + Math.sin(frame*.02 + i*1.7)*160*Math.cos(i);
-      const sy = 1200 + Math.cos(frame*.017 + i*2.3)*78*Math.sin(i*1.3);
+      const sx = 4000 + Math.sin(frame*.02 + i*1.7)*160*Math.cos(i);
+      const sy = 2600 + Math.cos(frame*.017 + i*2.3)*78*Math.sin(i*1.3);
       ctx.fillStyle = "rgba(255,220,150," + (.10 + .08*Math.sin(frame*.05+i)) + ")";
       ctx.fillRect(snap(sx-cam.x), snap(sy-cam.y), 16, PX);
     }
@@ -229,6 +236,24 @@ export function draw(){
   drawSpeechBubbles(npcs, player, frame);
   drawMinimap(player, dog);
   drawBiscuitArrow(dog, state);
+
+  /* region name banner (ALttP-style fade) */
+  if(bannerT > 0 && regionName){
+    const alpha = bannerT > 200 ? (240-bannerT)/40 : bannerT > 40 ? 1 : bannerT/40;
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.fillStyle = '#1b1430';
+    ctx.fillRect(VW/2-150, VH*0.2, 300, 40);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#ffe9c2';
+    ctx.font = '900 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(regionName, VW/2, VH*0.2+20);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  }
 }
 
 export function init(){

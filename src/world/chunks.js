@@ -3,12 +3,12 @@
 // Each chunk runs the full bake.js drawing code but clips to its own region,
 // so every chunk is visually identical to that slice of the original single-canvas bake.
 
-import { WORLD, CHUNK_W, VW, VH, DAY_SEED } from '../engine/constants.js';
-import { mulberry32, bakeCanvas } from '../engine/utils.js';
+import { WORLD, CHUNK_W, VW, VH } from '../engine/constants.js';
+import { bakeCanvas } from '../engine/utils.js';
 import { bakeGroundInto } from './bake.js';
 
-const COLS = Math.ceil(WORLD.w / CHUNK_W); // 4
-const ROWS = Math.ceil(WORLD.h / CHUNK_W); // 3
+const COLS = Math.ceil(WORLD.w / CHUNK_W); // 8 for 8192-wide world
+const ROWS = Math.ceil(WORLD.h / CHUNK_W); // 8
 const MAX_CACHED = 12;
 
 const cache = new Map(); // "cx,cy" → offscreen canvas
@@ -21,7 +21,7 @@ function bakeChunk(cx, cy) {
   g.beginPath(); g.rect(0, 0, CHUNK_W, CHUNK_W); g.clip();
   // Translate so bakeGroundInto can use world coordinates unchanged
   g.translate(-wx0, -wy0);
-  bakeGroundInto(g, mulberry32(DAY_SEED));
+  bakeGroundInto(g, wx0, wy0);
   g.restore();
   return canvas;
 }

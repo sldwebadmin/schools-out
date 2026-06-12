@@ -5,21 +5,23 @@ export let mini = null;
 export let MSC = 0;
 
 export function bakeMini(){
-  MSC = 150 / WORLD.w;
+  MSC = 150 / WORLD.w; // ≈0.01831 — world is square so mh = 150 too
   const mh = Math.round(WORLD.h * MSC);
   const [c, g] = bakeCanvas(150, mh);
   g.fillStyle = "#2c5232"; g.fillRect(0,0,150,mh);
-  const B = (x,y,w,h,col)=>{ g.fillStyle=col; g.fillRect(x*MSC, y*MSC, Math.max(1,w*MSC), Math.max(1,h*MSC)); };
-  B(26,950,620,2010,"#15331c");
-  B(660,760,2580,180,"#15331c");
-  B(3240,950,180,2010,"#15331c");
-  B(1240,80,1620,640,"#7a4a3e");
-  B(660,940,2580,2034,"#3f5d44");
-  B(860,1090,380,220,"#2e6f8e");
-  B(3420,1100,560,1340,"#5d4a7a");
-  B(RX,940,140,1540,"#2a2345");
-  B(660,HY1,3300,140,"#2a2345");
-  B(660,HY2,2580,140,"#2a2345");
-  B(3680,1590,140,850,"#2a2345");
+  const B = (x,y,w,h,col) => {
+    g.fillStyle=col;
+    g.fillRect(x*MSC, y*MSC, Math.max(1,w*MSC), Math.max(1,h*MSC));
+  };
+  B(0,    2048, 3200, 2560, "#0d2614"); // Whispering Woods
+  B(2976, 128,  2240, 1600, "#7a4a3e"); // School District
+  B(3200, 2048, 2560, 1600, "#3a6040"); // Maple Park
+  B(5952, 2048, 2240, 1920, "#4a3a6a"); // Maple Mart
+  B(2816, 5376, 2560, 2560, "#3f5d44"); // Maple Court (neighbourhood)
+  B(3764, 2470, 472,  260,  "#2e6f8e"); // Park pond
+  B(RX,   1600, 140,  6080, "#2a2345"); // main N-S road
+  B(2816, HY1,  2560, 140,  "#2a2345"); // HY1
+  B(2816, HY2,  2560, 140,  "#2a2345"); // HY2
+  B(4166, 3100, 1786, 140,  "#2a2345"); // shop spur
   mini = c;
 }
