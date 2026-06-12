@@ -1,10 +1,9 @@
 import { WORLD } from './constants.js';
 import { clamp } from './utils.js';
-import { walls } from '../world/map.js';
+import { nearbyWalls } from './spatialgrid.js';
 
 export function blocked(x, y, r, ignoreHop){
-  for(const w of walls){
-    if(w.ghost) continue;
+  for(const w of nearbyWalls(x, y, r)){
     if(ignoreHop && w.hop) continue;
     const nx = clamp(x, w.x, w.x+w.w), ny = clamp(y, w.y, w.y+w.h);
     if((x-nx)*(x-nx) + (y-ny)*(y-ny) < r*r) return w;
@@ -19,12 +18,12 @@ export function hitCR(a, w){
 
 export function moveActor(a, dx, dy, ignoreHop){
   a.x = clamp(a.x + dx, 34, WORLD.w-34);
-  for(const w of walls){
+  for(const w of nearbyWalls(a.x, a.y, a.r + 6)){
     if(w.ghost || (ignoreHop && w.hop)) continue;
     if(hitCR(a, w)){ a.x = dx > 0 ? w.x - a.r : w.x + w.w + a.r; }
   }
   a.y = clamp(a.y + dy, 34, WORLD.h-34);
-  for(const w of walls){
+  for(const w of nearbyWalls(a.x, a.y, a.r + 6)){
     if(w.ghost || (ignoreHop && w.hop)) continue;
     if(hitCR(a, w)){ a.y = dy > 0 ? w.y - a.r : w.y + w.h + a.r; }
   }

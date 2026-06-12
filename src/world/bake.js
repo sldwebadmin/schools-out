@@ -1,25 +1,28 @@
-import { WORLD, GOAL, RX, HY1, HY2, DAY_SEED } from '../engine/constants.js';
-import { mulberry32, bakeCanvas } from '../engine/utils.js';
+// Ground drawing logic — called per-chunk by chunks.js.
+// bakeGroundInto(g, rnd) draws the full world in world coordinates;
+// the caller sets up clip + translate so only the chunk region is visible.
 
-export let ground = null;
+import { WORLD, GOAL, RX, HY1, HY2 } from '../engine/constants.js';
 
-export function bakeGround(){
-  const [c, g] = bakeCanvas(WORLD.w, WORLD.h);
-  const rnd = mulberry32(DAY_SEED);
+export function bakeGroundInto(g, rnd) {
+  const W = WORLD.w, H = WORLD.h;
+
   /* wild meadow base */
-  g.fillStyle = "#4e7d4a"; g.fillRect(0,0,WORLD.w,WORLD.h);
-  for(let i=0;i<9000;i++){ g.fillStyle = rnd()<.5 ? "#588a55" : "#446e42"; g.fillRect((rnd()*WORLD.w)|0, (rnd()*WORLD.h)|0, 6, 4); }
+  g.fillStyle = "#4e7d4a"; g.fillRect(0,0,W,H);
+  for(let i=0;i<9000;i++){ g.fillStyle = rnd()<.5 ? "#588a55" : "#446e42"; g.fillRect((rnd()*W)|0, (rnd()*H)|0, 6, 4); }
   for(let i=0;i<700;i++){
-    const fx = rnd()*WORLD.w, fy = rnd()*WORLD.h;
+    const fx = rnd()*W, fy = rnd()*H;
     if(rnd()<.75){ g.fillStyle = "#3a6340"; g.fillRect(fx, fy, 3, 7); }
     else { g.fillStyle = ["#ff9ac1","#ffd27a","#cdb8ff"][(rnd()*3)|0]; g.fillRect(fx, fy, 5, 5); }
   }
+
   /* forest floors */
   function floor(x,y,w,h){
     g.fillStyle = "rgba(18,42,26,.5)"; g.fillRect(x,y,w,h);
     for(let i=0;i<(w*h)/2600;i++){ g.fillStyle = rnd()<.5 ? "#26492e" : "#1d3b25"; g.fillRect(x+rnd()*w, y+rnd()*h, 7, 5); }
   }
   floor(26, 950, 620, 2010); floor(660, 760, 2580, 180); floor(3240, 950, 180, 2010);
+
   /* neighborhood lawn */
   g.fillStyle = "#4c7a4f"; g.fillRect(660, 940, 2580, 2034);
   for(let i=0;i<5200;i++){ g.fillStyle = rnd()<.5 ? "#56885a" : "#447047"; g.fillRect(660+(rnd()*2580)|0, 940+(rnd()*2034)|0, 6, 4); }
@@ -28,6 +31,7 @@ export function bakeGround(){
     if(rnd()<.6){ g.fillStyle = "#3a6340"; g.fillRect(fx, fy, 3, 6); }
     else { g.fillStyle = rnd()<.5 ? "#ff9ac1" : "#ffd27a"; g.fillRect(fx, fy, 5, 5); }
   }
+
   /* school grounds */
   g.fillStyle = "#467a4d"; g.fillRect(1240, 80, 1620, 640);
   for(let i=0;i<900;i++){ g.fillStyle = rnd()<.5 ? "#4f8757" : "#3e6c45"; g.fillRect(1240+rnd()*1620, 80+rnd()*640, 6, 4); }
@@ -41,6 +45,7 @@ export function bakeGround(){
   g.beginPath(); g.arc(GOAL.x, GOAL.y, GOAL.r, 0, 7); g.stroke(); g.setLineDash([]);
   g.setLineDash([10,8]); g.lineWidth = 3;                             // chalk ball diamond
   g.strokeRect(1330, 280, 120, 120); g.setLineDash([]);
+
   /* roads with curbs */
   function road(x,y,w,h){
     g.fillStyle = "#46406b"; g.fillRect(x,y,w,h);
@@ -62,11 +67,13 @@ export function bakeGround(){
   road(660, HY1, 3300, 140);
   road(660, HY2, 2580, 140);
   road(3680, 1590, 140, 850);
+
   /* cul-de-sac */
   g.fillStyle = "#46406b"; g.beginPath(); g.arc(1950, 2520, 150, 0, 7); g.fill();
   g.strokeStyle = "#353055"; g.lineWidth = 5; g.beginPath(); g.arc(1950, 2520, 148, 0, 7); g.stroke();
   g.fillStyle = "#4c7a4f"; g.beginPath(); g.arc(1950, 2520, 44, 0, 7); g.fill();
   g.fillStyle = "#ff9ac1"; g.fillRect(1938, 2508, 5, 5); g.fillStyle = "#ffd27a"; g.fillRect(1958, 2522, 5, 5);
+
   /* dashes, crosswalks, manholes */
   g.fillStyle = "#8d80b8";
   for(let y=960; y<2400; y+=64) g.fillRect(RX+66, y, 8, 28);
@@ -79,6 +86,7 @@ export function bakeGround(){
     g.fillStyle = "#2e294a"; g.beginPath(); g.arc(mx,my,11,0,7); g.fill();
     g.strokeStyle = "#55517a"; g.lineWidth = 3; g.beginPath(); g.arc(mx,my,7,0,7); g.stroke();
   }
+
   /* park: paths, pond, lily pads */
   function dirt(x,y,w,h){
     g.fillStyle = "#8a7350"; g.fillRect(x,y,w,h);
@@ -94,6 +102,7 @@ export function bakeGround(){
   g.fillStyle = "#2e7a4f";
   for(const [lx,ly] of [[940,1240],[1130,1150],[1080,1260]]){ g.beginPath(); g.ellipse(lx,ly,16,9,0,0,7); g.fill(); }
   g.fillStyle = "#d9c08c"; g.fillRect(900, 1316, 60, 8); g.fillRect(1180, 1086, 50, 8);
+
   /* community garden */
   g.fillStyle = "#6b4a2f"; g.fillRect(1420, 2340, 300, 300);
   for(let ry=2360; ry<2630; ry+=36){
@@ -101,12 +110,14 @@ export function bakeGround(){
     g.fillStyle = "#5fae5a";
     for(let px2=1444; px2<1700; px2+=24) g.fillRect(px2, ry+2, 6, 8);
   }
+
   /* basketball half court */
   g.fillStyle = "#55517a"; g.fillRect(2160, 2330, 260, 200);
   g.strokeStyle = "#cfc6e8"; g.lineWidth = 4;
   g.strokeRect(2164, 2334, 252, 192);
   g.strokeRect(2250, 2334, 80, 70);
   g.beginPath(); g.arc(2290, 2404, 40, 0, Math.PI); g.stroke();
+
   /* market plaza */
   g.fillStyle = "#3f3a60"; g.fillRect(3480, 1640, 460, 280);
   g.fillStyle = "#cfc6e8";
@@ -115,5 +126,4 @@ export function bakeGround(){
     g.fillStyle = (i+j)%2 ? "#1b1430" : "#ffe9c2";
     g.fillRect(3680+i*20, 2000+j*20, 20, 20);
   }
-  ground = c;
 }

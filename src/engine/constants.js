@@ -1,4 +1,6 @@
 export const VW = 960, VH = 540, PX = 3;
+export const TILE = 32;      // tile size in world pixels
+export const CHUNK_W = 1024; // chunk canvas size (square) in world pixels
 export const WORLD = { w: 4000, h: 3000 };
 export const RX = 1880;
 export const HY1 = 1450, HY2 = 2120;

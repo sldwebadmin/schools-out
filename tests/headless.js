@@ -8,6 +8,7 @@ const mockCtx = {
   lineWidth: 1, globalAlpha: 1,
   fillRect: noop, strokeRect: noop, clearRect: noop,
   beginPath: noop, arc: noop, ellipse: noop, moveTo: noop, lineTo: noop,
+  rect: noop, clip: noop,  // needed for chunk clipping
   fill: noop, stroke: noop, closePath: noop,
   drawImage: noop, save: noop, restore: noop, translate: noop, rotate: noop,
   fillText: noop, measureText: () => ({ width: 0 }),
@@ -96,13 +97,31 @@ try {
   errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));
 }
 
+/* ── Chunk system assertions ─────────────────────────────────────────── */
+try {
+  const { getCacheSize, getCachedKeys } = await import('../src/world/chunks.js');
+  const sz = getCacheSize();
+  if(sz < 1) errors.push('Chunk cache is empty — no chunks were loaded during gameplay');
+  if(sz > 12) errors.push(`Chunk cache exceeded limit: ${sz} chunks (max 12)`);
+  const keys = getCachedKeys();
+  // Verify cache contains only valid "cx,cy" keys
+  for(const k of keys){
+    if(!/^\d+,\d+$/.test(k)) errors.push(`Invalid chunk key in cache: "${k}"`);
+  }
+  console.log(`Chunk cache: ${sz} chunks loaded (keys: ${keys.join(' ')})`);
+} catch(e) {
+  errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));
+}
+
 /* ── Module file structure ───────────────────────────────────────── */
 const required = [
   'index.html', 'styles.css', 'src/main.js',
   'src/engine/constants.js', 'src/engine/utils.js',
   'src/engine/collision.js', 'src/engine/input.js',
+  'src/engine/spatialgrid.js',
   'src/audio/synth.js',
   'src/world/map.js', 'src/world/bake.js', 'src/world/minimap.js',
+  'src/world/chunks.js', 'src/world/tiledata.js',
   'src/entities/npcs.js', 'src/entities/pickups.js',
   'src/entities/player.js', 'src/entities/dog.js',
   'src/render/draw.js', 'src/render/props.js',

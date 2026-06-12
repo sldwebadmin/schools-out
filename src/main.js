@@ -4,7 +4,8 @@ import { R, RI, clamp } from './engine/utils.js';
 import { audio, startMusic, toggleMusic, sfx, iceCreamTruck } from './audio/synth.js';
 import { keys, setupKeyboard } from './engine/input.js';
 import { walls, canopies, lamps, buildMap } from './world/map.js';
-import { ground, bakeGround } from './world/bake.js';
+import { initChunks, drawChunks, evictChunks } from './world/chunks.js';
+import { buildGrid } from './engine/spatialgrid.js';
 import { bakeMini } from './world/minimap.js';
 import { blocked, moveActor } from './engine/collision.js';
 import { makeNPCs } from './entities/npcs.js';
@@ -184,7 +185,8 @@ export function draw(){
   cam.x = clamp(player.x - VW/2, 0, WORLD.w - VW);
   cam.y = clamp(player.y - VH/2, 0, WORLD.h - VH);
 
-  ctx.drawImage(ground, cam.x, cam.y, VW, VH, 0, 0, VW, VH);
+  drawChunks(ctx, cam.x, cam.y);
+  evictChunks(cam.x, cam.y);
 
   /* pond shimmer */
   if(inView(840, 1060, 420, 280)){
@@ -240,7 +242,7 @@ export function init(){
 
   initDraw(ctx, cam);
 
-  buildMap(); bakeGround(); bakeMini(); resetRun();
+  buildMap(); buildGrid(walls); initChunks(); bakeMini(); resetRun();
   if(USE_SHEETS) buildSheets();
 
   setupKeyboard(
