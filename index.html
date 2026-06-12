@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>School's Out — Maple Court Overworld</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div id="stage">
+  <div id="wrap">
+    <canvas id="game" width="960" height="540"></canvas>
+
+    <div id="title" class="overlay">
+      <div>
+        <div class="eyebrow" id="daylabel">Summer · Maple Court</div>
+        <h1>School's Out<span>Dog Days Dash</span></h1>
+        <div class="mission-line">Mission: leave home, reach the school playground</div>
+        <div class="prompt">Press Space / Tap to Start</div>
+        <div class="howto">
+          <span class="kb">WASD / ARROWS&nbsp; MOVE&nbsp;·&nbsp; SHIFT&nbsp; SPRINT&nbsp;·&nbsp; SPACE&nbsp; HOP FENCES&nbsp;·&nbsp; M&nbsp; MUSIC<br></span>
+          YOUR HOUSE IS AT THE BOTTOM OF THE STREET. THE SCHOOL IS NORTH, PAST THE TREE LINE.<br>
+          BISCUIT IS NAPPING SOMEWHERE ALONG THE WAY.
+        </div>
+      </div>
+    </div>
+
+    <div id="win" class="overlay hidden">
+      <div>
+        <div class="eyebrow">Made it to the playground!</div>
+        <div class="score-big" id="winscore">0</div>
+        <div class="best" id="winstat">BEST 0</div>
+        <div class="prompt" style="margin-top:20px;">Press Space / Tap to Run It Again</div>
+      </div>
+    </div>
+
+    <div id="gameover" class="overlay hidden">
+      <div>
+        <div class="eyebrow">Caught by Biscuit!</div>
+        <div class="score-big" id="finalscore">0</div>
+        <div class="best" id="beststat">BEST 0</div>
+        <div class="prompt" style="margin-top:20px;">Press Space / Tap to Run It Back</div>
+      </div>
+    </div>
+
+    <div id="mission">
+      <div class="m1">Get to the school playground!</div>
+      <div class="m2">Your street runs straight north to it</div>
+    </div>
+
+    <div id="hud" class="hidden">
+      <div class="hudbox" id="scorebox">0s · 🍦 0</div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <div class="hudbox meter" id="doglabel">Biscuit · zzz<div class="bar"><div class="fill" id="dogfill"></div></div></div>
+        <div class="hudbox meter">Stamina<div class="bar"><div class="fill" id="stamfill"></div></div></div>
+      </div>
+    </div>
+
+    <div id="touch">
+      <button class="btn" id="btnSprint">Sprint</button>
+      <button class="btn" id="btnHop">Hop</button>
+    </div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
