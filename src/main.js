@@ -3,8 +3,11 @@ import { buildSheets } from './render/sheet.js';
 import { R, RI, clamp } from './engine/utils.js';
 import { audio, startMusic, toggleMusic, sfx, iceCreamTruck } from './audio/synth.js';
 import { keys, setupKeyboard } from './engine/input.js';
-import { walls, canopies, lamps, buildMap } from './world/map.js';
+import { walls, canopies, lamps, doors, buildMap } from './world/map.js';
 import { regionAt } from './world/tiledata.js';
+import { INTERIORS } from './world/interiorMaps.js';
+import { startFade, stepFade, drawFade, isFading } from './engine/transition.js';
+import { setBounds } from './engine/collision.js';
 import { initChunks, drawChunks, evictChunks } from './world/chunks.js';
 import { buildGrid } from './engine/spatialgrid.js';
 import { bakeMini } from './world/minimap.js';
@@ -25,6 +28,8 @@ const cam = { x:0, y:0 };
 let state = "title", frame = 0, time = 0, pops = 0, best = 0, missionT = 0;
 let pickups = [], parts = [], npcs = [], flies = [];
 let regionName = null, bannerT = 0;
+let insideMap = null, interiorNPCs = [], interactText = null;
+let doorCooldown = 0, savedDogMode = 'sleep';
 let joy = null, sprintHeld = false;
 
 function fit(){
@@ -38,7 +43,33 @@ function tryHop(){
   player.hop = 18; player.hopCd = 42; sfx.hop();
 }
 
+function enterInterior(d){
+  insideMap = d.target;
+  const interior = INTERIORS[insideMap];
+  interiorNPCs = interior.npcs.map(n => Object.assign({},n,{
+    x:n.wps[0][0], y:n.wps[0][1], i:n.wps.length>1?1:0, anim:0, face:1, dir:2
+  }));
+  player.x = d.spawnX; player.y = d.spawnY;
+  savedDogMode = dog.mode; dog.mode = 'sleep'; // pause dog
+  buildGrid(interior.walls);
+  setBounds(interior.w, interior.h);
+  interactText = null; doorCooldown = 60;
+}
+
+function exitInterior(ex){
+  player.x = ex.worldTarget.x; player.y = ex.worldTarget.y;
+  dog.mode = savedDogMode;
+  insideMap = null; interiorNPCs = []; interactText = null; doorCooldown = 60;
+  buildGrid(walls); setBounds(WORLD.w, WORLD.h);
+}
+
 function resetRun(){
+  // Ensure we're back on the overworld
+  if(insideMap !== null){
+    insideMap = null; interiorNPCs = []; interactText = null;
+    buildGrid(walls); setBounds(WORLD.w, WORLD.h);
+  }
+  doorCooldown = 0;
   resetPlayer();
   resetDog();
   pickups = []; parts = [];
@@ -73,6 +104,7 @@ function burst(x,y,c){ for(let i=0;i<10;i++) parts.push({x,y,vx:R(-2,2),vy:R(-2.
 
 export function update(){
   frame++;
+  stepFade();
   if(state !== "run") return;
   time += 1/60;
   if(missionT > 0){ missionT--; document.getElementById("mission").style.opacity = missionT > 60 ? 1 : missionT/60; }
@@ -101,6 +133,48 @@ export function update(){
     if(Math.abs(mx) > .2) player.face = mx >= 0 ? 1 : -1;
     if(USE_SHEETS) player.dir = Math.abs(my) > Math.abs(mx) ? (my > 0 ? 0 : 3) : (mx >= 0 ? 2 : 1);
     if(frame % 9 === 0 && player.hop === 0) parts.push({x:player.x-mx*8, y:player.y+8, vx:0, vy:0, l:10, c:"rgba(205,184,160,.5)", s:PX});
+  }
+
+  /* ── INTERIOR MODE ─────────────────────────────────────── */
+  if(insideMap !== null){
+    if(doorCooldown > 0) doorCooldown--;
+    // Check exits
+    if(!isFading() && doorCooldown <= 0){
+      for(const ex of INTERIORS[insideMap].exits){
+        if(player.x+player.r > ex.x && player.x-player.r < ex.x+ex.w &&
+           player.y+player.r > ex.y && player.y-player.r < ex.y+ex.h){
+          startFade(() => exitInterior(ex)); break;
+        }
+      }
+    }
+    // Interactable proximity
+    interactText = null;
+    for(const ia of INTERIORS[insideMap].interactables){
+      if(Math.hypot(player.x-ia.x, player.y-ia.y) < ia.r + 14){
+        if(ia.pickup && !ia.claimed){
+          let ok = true;
+          if(ia._key){
+            try {
+              if(typeof localStorage !== 'undefined'){
+                if(localStorage.getItem(ia._key)) ok = false;
+                else localStorage.setItem(ia._key,'1');
+              }
+            } catch(e){}
+          }
+          ia.claimed = true;
+          if(ok){ pops++; player.stam=Math.min(100,player.stam+26); sfx.pickup(); ia.txt2="Popsicle! +1 🍦"; }
+          else { ia.txt2="Already grabbed today's popsicle."; }
+        }
+        interactText = ia; break;
+      }
+    }
+    // Interior NPCs face player
+    for(const n of interiorNPCs){
+      n.anim += .04;
+      n.face = player.x >= n.x ? 1 : -1;
+      if(USE_SHEETS) n.dir = player.x >= n.x ? 2 : 1;
+    }
+    return; // skip overworld logic
   }
 
   /* region banner */
@@ -181,6 +255,24 @@ export function update(){
   for(const f of flies){ f.p += .03; f.x += Math.sin(f.p)*.4; }
   if(frame % 3200 === 1600) iceCreamTruck();
 
+  /* door detection (overworld) */
+  if(doorCooldown > 0){ doorCooldown--; if(doorCooldown === 0) interactText = null; }
+  if(!isFading() && doorCooldown <= 0){
+    interactText = null;
+    for(const d of doors){
+      if(player.x+player.r > d.x && player.x-player.r < d.x+d.w &&
+         player.y+player.r > d.y && player.y-player.r < d.y+d.h){
+        if(d.target){
+          startFade(() => enterInterior(d));
+        } else {
+          interactText = {txt: d.txt || "Locked.", txt2:"(knock knock)"};
+          doorCooldown = 120;
+        }
+        break;
+      }
+    }
+  }
+
   const mm = Math.floor(time/60), ss = String(Math.floor(time%60)).padStart(2,"0");
   document.getElementById("scorebox").textContent = mm + ":" + ss + " · \u{1F366} " + pops;
   document.getElementById("dogfill").style.transform = "scaleX(" +
@@ -189,6 +281,59 @@ export function update(){
 }
 
 export function draw(){
+  /* ── INTERIOR PATH ─────────────────────────────────────────────── */
+  if(insideMap !== null){
+    const interior = INTERIORS[insideMap];
+    const iox = Math.floor((VW - interior.w) / 2);
+    const ioy = Math.floor((VH - interior.h) / 2);
+    cam.x = -iox; cam.y = -ioy;
+
+    // Letterbox bars outside the interior bounds
+    ctx.fillStyle = "#0a0812";
+    if(ioy > 0){ ctx.fillRect(0, 0, VW, ioy); ctx.fillRect(0, VH - ioy, VW, ioy); }
+    if(iox > 0){ ctx.fillRect(0, 0, iox, VH); ctx.fillRect(VW - iox, 0, iox, VH); }
+
+    // Floor — solid base + light grid lines (planks for house, tiles for mart)
+    ctx.fillStyle = interior.bg;
+    ctx.fillRect(iox, ioy, interior.w, interior.h);
+    ctx.fillStyle = "rgba(0,0,0,0.07)";
+    const ls = interior.name === "Your House" ? 24 : 32;
+    for(let lx = iox; lx < iox + interior.w; lx += ls) ctx.fillRect(lx, ioy, 2, interior.h);
+    for(let ly = ioy; ly < ioy + interior.h; ly += ls) ctx.fillRect(iox, ly, interior.w, 2);
+
+    drawShadows(interior.walls);
+
+    // Exit door strip (gold, at bottom of exit rect)
+    for(const ex of interior.exits){
+      ctx.fillStyle = "rgba(255,196,77,.45)";
+      ctx.fillRect(snap(ex.x - cam.x), snap(ex.y + ex.h - 6 - cam.y), ex.w, 6);
+    }
+
+    // Interactable pulse rings
+    for(const ia of interior.interactables){
+      const pulse = .5 + .3 * Math.sin(frame * .1);
+      ctx.beginPath();
+      ctx.arc(snap(ia.x - cam.x), snap(ia.y - cam.y), 8 + Math.sin(frame * .1) * 2, 0, 7);
+      ctx.strokeStyle = `rgba(255,196,77,${pulse})`;
+      ctx.lineWidth = PX;
+      ctx.stroke();
+    }
+
+    // Y-sorted entities (interior walls + NPCs + player)
+    const ients = [];
+    for(const w of interior.walls) ients.push({y: w.y + w.h, f: () => drawWall(w, frame)});
+    for(const n of interiorNPCs) ients.push({y: n.y, f: () => drawNPC(n, frame)});
+    ients.push({y: player.y + 1, f: () => drawPlayer(player, frame)});
+    ients.sort((a,b) => a.y - b.y);
+    for(const e of ients) e.f();
+
+    drawDuskWash();
+    if(interactText) _drawInteractOverlay(interactText);
+    drawFade(ctx, VW, VH);
+    return;
+  }
+
+  /* ── OVERWORLD PATH ────────────────────────────────────────────── */
   cam.x = clamp(player.x - VW/2, 0, WORLD.w - VW);
   cam.y = clamp(player.y - VH/2, 0, WORLD.h - VH);
 
@@ -237,6 +382,8 @@ export function draw(){
   drawMinimap(player, dog);
   drawBiscuitArrow(dog, state);
 
+  if(interactText) _drawInteractOverlay(interactText);
+
   /* region name banner (ALttP-style fade) */
   if(bannerT > 0 && regionName){
     const alpha = bannerT > 200 ? (240-bannerT)/40 : bannerT > 40 ? 1 : bannerT/40;
@@ -254,6 +401,31 @@ export function draw(){
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
   }
+
+  drawFade(ctx, VW, VH);
+}
+
+function _drawInteractOverlay(ia){
+  const bw = 290, bh = ia.txt2 ? 56 : 34;
+  const bx = VW/2 - bw/2, by = VH * 0.72;
+  ctx.save();
+  ctx.globalAlpha = 0.88;
+  ctx.fillStyle = '#1b1430';
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#ffc44d';
+  ctx.font = 'bold 12px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(ia.txt, VW/2, by + 14);
+  if(ia.txt2){
+    ctx.fillStyle = '#ffe9c2';
+    ctx.font = '11px monospace';
+    ctx.fillText(ia.txt2, VW/2, by + 38);
+  }
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.restore();
 }
 
 export function init(){
@@ -307,5 +479,6 @@ if(typeof window !== "undefined"){
 // Test-accessible exports
 export { keys, player, dog };
 export const getState = () => state;
+export const getInsideMap = () => insideMap;
 export function startRun(){ start(); }
 export function stepFrame(){ update(); draw(); }

@@ -4,6 +4,7 @@ import { mulberry32 } from '../engine/utils.js';
 export const walls = [];
 export const canopies = [];
 export const lamps = [];
+export const doors = []; // {x,y,w,h, target:"key"|null, spawnX,spawnY, worldReturn:{x,y}, txt}
 
 function addWall(x,y,w,h,type,o={}){ walls.push(Object.assign({x,y,w,h,type,hop:false,ghost:false},o)); }
 function addTree(x,y,r){
@@ -41,8 +42,12 @@ function yard(x,y,w,h,hue,opts={}){
   if(opts.mailbox) addWall(x+frontGapAt+98,y-6,10,12,"mailbox",{ghost:true});
 }
 
+function door(x,y,w,h,target,spawnX,spawnY,worldReturn,txt=''){
+  doors.push({x,y,w,h,target,spawnX,spawnY,worldReturn,txt});
+}
+
 export function buildMap(){
-  walls.length=0; canopies.length=0; lamps.length=0;
+  walls.length=0; canopies.length=0; lamps.length=0; doors.length=0;
 
   // World border hedge
   addWall(0,0,WORLD.w,26,"hedge"); addWall(0,WORLD.h-26,WORLD.w,26,"hedge");
@@ -157,4 +162,45 @@ export function buildMap(){
   // Intersection lamps
   lamps.push({x:RX-30,y:HY1-20}); lamps.push({x:RX+170,y:HY1-20});
   lamps.push({x:RX-30,y:HY2-20}); lamps.push({x:RX+170,y:HY2-20});
+
+  /* ══════════════════════════════════════════════════════
+     DOORS
+     yard(x,y,w,h) → house south face = y+h-260+170 = y+h-90
+     door centred on south face of each building.
+  ══════════════════════════════════════════════════════ */
+
+  // Player's house — yard(3500,7420,440,360): hx=3595, hy=7520, south=7690
+  // Interior spawn set slightly north of exit so player doesn't loop
+  door(3658, 7678, 64, 22, "house", 240, 200, {x:4096, y:7710});
+
+  // Maple Mart — market building south face y=2800
+  door(6890, 2788, 80, 22, "mart", 320, 340, {x:6930, y:2830});
+
+  // School main building — south face y=700, locked
+  door(3900, 688, 100, 22, null, 0, 0, {x:3950, y:720},
+       "School's out for summer!");
+
+  // School gym — south face y=1040, locked
+  door(3500, 1028, 80, 22, null, 0, 0, {x:3540, y:1060},
+       "Gym's closed for the summer.");
+
+  // NW house — yard(2900,5430,520,480): hy=5650, south=5820
+  door(3058, 5808, 50, 22, null, 0, 0, {x:3083, y:5830},
+       "Nobody home right now.");
+
+  // NE house — yard(4350,5430,520,480): hx=4485, hy=5650, south=5820
+  door(4508, 5808, 50, 22, null, 0, 0, {x:4533, y:5830},
+       "Back in a bit!");
+
+  // SE between-streets house — yard(4350,6430,460,240): hy=6410, south=6580
+  door(4478, 6568, 50, 22, null, 0, 0, {x:4503, y:6590},
+       "Shh — baby napping.");
+
+  // SW south house — yard(2900,7050,520,420): hy=7210, south=7380
+  door(3058, 7368, 50, 22, null, 0, 0, {x:3083, y:7390},
+       "Ring the bell?");
+
+  // SE south house — yard(4350,7050,520,420): hx=4485, hy=7210, south=7380
+  door(4508, 7368, 50, 22, null, 0, 0, {x:4533, y:7390},
+       "Gone fishing.");
 }

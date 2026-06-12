@@ -49,7 +49,7 @@ global.AudioContext = undefined;
 global.webkitAudioContext = undefined;
 
 /* ── Import game (stubs must be set up first) ────────────────────── */
-const { init, startRun, stepFrame, keys, player, dog, getState } =
+const { init, startRun, stepFrame, keys, player, dog, getState, getInsideMap } =
   await import('../src/main.js');
 
 /* ── Simulate gameplay ───────────────────────────────────────────── */
@@ -93,6 +93,24 @@ try {
   console.log(`Dog mode: ${dog.mode}, state: ${getState()}, player: (${player.x|0},${player.y|0})`);
   console.log('Gameplay simulation: 5400 frames completed without runtime error');
 
+  // Phase 5: interior enter/exit cycle
+  // House wall south face = y+7690. Door (3658,7678,64,22) extends to y=7700.
+  // Stand at y=7706 (16px south of wall, r=12 → no collision push) inside door zone.
+  startRun(); // reset to overworld
+  player.x = 3690; player.y = 7706;
+  keys.KeyW = false; keys.KeyS = false; keys.KeyA = false; keys.KeyD = false;
+  // Step enough frames for fade-out (30) + swap + fade-in (30) = 60 frames
+  for(let i = 0; i < 90; i++) stepFrame();
+  if(getInsideMap() !== 'house') errors.push(`Expected insideMap='house' after entering door, got '${getInsideMap()}'`);
+  else console.log('Interior enter: OK (house)');
+
+  // Walk south to exit (exit at y=330, player spawns at y=200 inside house 360px tall)
+  keys.KeyS = true;
+  for(let i = 0; i < 180; i++) stepFrame();
+  keys.KeyS = false;
+  if(getInsideMap() !== null) errors.push(`Expected insideMap=null after exiting, got '${getInsideMap()}'`);
+  else console.log('Interior exit: OK (back on overworld)');
+
 } catch(e) {
   errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));
 }
@@ -118,10 +136,10 @@ const required = [
   'index.html', 'styles.css', 'src/main.js',
   'src/engine/constants.js', 'src/engine/utils.js',
   'src/engine/collision.js', 'src/engine/input.js',
-  'src/engine/spatialgrid.js',
+  'src/engine/spatialgrid.js', 'src/engine/transition.js',
   'src/audio/synth.js',
   'src/world/map.js', 'src/world/bake.js', 'src/world/minimap.js',
-  'src/world/chunks.js', 'src/world/tiledata.js',
+  'src/world/chunks.js', 'src/world/tiledata.js', 'src/world/interiorMaps.js',
   'src/entities/npcs.js', 'src/entities/pickups.js',
   'src/entities/player.js', 'src/entities/dog.js',
   'src/render/draw.js', 'src/render/props.js',
