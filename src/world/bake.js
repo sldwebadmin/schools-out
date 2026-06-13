@@ -57,6 +57,9 @@ export function bakeGroundInto(g, wx0, wy0) {
   /* ── 3. Whispering Woods (256..2304, 2048..5632) ───────────────── */
   g.fillStyle="rgba(18,42,26,.55)"; g.fillRect(256,2048,2048,3584);
   tex(256,2048,2304,5632, 600, "#26492e","#1d3b25", 7,5);
+  // Treehouse village clearing (lighter grass inside woods)
+  g.fillStyle="#4c7a4f"; g.fillRect(900,3060,500,440);
+  tex(900,3060,1400,3500, 80, "#56885a","#447047", 6,4);
 
   /* ── 4. Park (2560..4608, 2304..3456) ───────────────────────────── */
   g.fillStyle="#4c7a4f"; g.fillRect(2560,2304,2048,1152);
@@ -149,6 +152,13 @@ export function bakeGroundInto(g, wx0, wy0) {
   dirt(2304,2900,256,60);
   // Park north → school south connector
   dirt(4490,2112,60,192);
+  // Main trail: east entry west to treehouse village (y=2900, x=1380..2304)
+  dirt(1380,2900,924,50);
+  dirt(1380,2900,50,200);    // south spur to clearing
+  dirt(1100,3060,340,50);    // west into clearing
+  // Hidden south trail (narrow, rewards exploration from south woods/meadow)
+  dirt(700,3500,40,2060);    // y=3500..5560, x=700..740
+  dirt(500,5540,260,50);     // east-west connector at south end
 
   /* ── 11. Sidewalks ───────────────────────────────────────────────── */
   sidewalk(4420,3584,28,2816);  // main road left side through neighbourhood + lake approach

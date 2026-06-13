@@ -234,4 +234,52 @@ export function drawWall(w, frame){
     rectW("#4a2e12", w.x + w.w - 12, w.y + w.h - 30, 8, 46);
   }
   else if(T === "water"){ /* collision barrier only — no render */ }
+  else if(T === "treehouse"){
+    const gh = Math.floor(w.h * .28);
+    const ch = Math.floor(w.h * .35);
+    const tx = w.x + Math.floor(w.w * .32), tw = Math.max(12, Math.floor(w.w * .36));
+    rectW("#4a3322", tx, w.y + gh + ch, tw, w.h - gh - ch);
+    rectW("#3a2719", tx, w.y + gh + ch, Math.floor(tw * .4), w.h - gh - ch);
+    ctx.fillStyle = "#2a5530";
+    ctx.beginPath(); ctx.ellipse(snap(w.x+w.w/2-cam.x), snap(w.y+gh+ch*.5-cam.y), w.w*.52, ch*.52, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#346640";
+    ctx.beginPath(); ctx.ellipse(snap(w.x+w.w/2-cam.x-10), snap(w.y+gh+ch*.38-cam.y), w.w*.38, ch*.36, 0, 0, 7); ctx.fill();
+    rectW("#a86f3e", w.x+Math.floor(w.w*.07), w.y+gh-4, Math.floor(w.w*.86), 8);
+    rectW("#8a5730", w.x+Math.floor(w.w*.07), w.y+gh-4, Math.floor(w.w*.86), 3);
+    rectW("#8a5730", w.x+Math.floor(w.w*.14), w.y, Math.floor(w.w*.72), gh+4);
+    rectW("#6b4020", w.x+Math.floor(w.w*.14), w.y+Math.floor(gh*.55), Math.floor(w.w*.72), 3);
+    rectW("#2ec4b6", w.x+Math.floor(w.w*.20), w.y+4, Math.floor(w.w*.18), Math.floor(gh*.45));
+    rectW("#1b8080", w.x+Math.floor(w.w*.29), w.y+4, 2, Math.floor(gh*.45));
+    rectW("#2ec4b6", w.x+Math.floor(w.w*.58), w.y+4, Math.floor(w.w*.18), Math.floor(gh*.45));
+    rectW("#1b8080", w.x+Math.floor(w.w*.67), w.y+4, 2, Math.floor(gh*.45));
+    rectW("#3a2719", w.x+Math.floor(w.w*.42), w.y+gh-20, Math.floor(w.w*.16), 22);
+    rectW("#ffc44d", w.x+Math.floor(w.w*.42)+Math.floor(w.w*.16)-4, w.y+gh-14, 3, 3);
+    rectW("#5a3a22", w.x+Math.floor(w.w*.07), w.y-12, Math.floor(w.w*.86), 14);
+    rectW("#6b4a2e", w.x+Math.floor(w.w*.03), w.y-16, Math.floor(w.w*.94), 6);
+    outline(w.x+Math.floor(w.w*.07), w.y-16, Math.floor(w.w*.86), gh+16);
+  }
+  else if(T === "bridge"){
+    const horiz = w.w >= w.h;
+    if(horiz){
+      rectW("#9a7040", w.x, w.y, w.w, w.h);
+      ctx.fillStyle = "#6b4a20";
+      for(let bx=w.x; bx<w.x+w.w; bx+=12) ctx.fillRect(snap(bx-cam.x), snap(w.y-cam.y), 10, w.h);
+      rectW("rgba(90,60,28,.9)", w.x, w.y-4, w.w, 3);
+      rectW("rgba(90,60,28,.9)", w.x, w.y+w.h+1, w.w, 3);
+      rectW("rgba(0,0,0,.18)", w.x+3, w.y+w.h+4, w.w, 5);
+    } else {
+      rectW("#9a7040", w.x, w.y, w.w, w.h);
+      ctx.fillStyle = "#6b4a20";
+      for(let by=w.y; by<w.y+w.h; by+=12) ctx.fillRect(snap(w.x-cam.x), snap(by-cam.y), w.w, 10);
+      rectW("rgba(90,60,28,.9)", w.x-4, w.y, 3, w.h);
+      rectW("rgba(90,60,28,.9)", w.x+w.w+1, w.y, 3, w.h);
+      rectW("rgba(0,0,0,.18)", w.x+w.w+4, w.y+3, 5, w.h);
+    }
+  }
+  else if(T === "ladder"){
+    rectW("#6b4a20", w.x+4, w.y-28, 3, 32);
+    rectW("#6b4a20", w.x+w.w-7, w.y-28, 3, 32);
+    ctx.fillStyle = "#8a6535";
+    for(let ry=w.y-24; ry<w.y+4; ry+=9) ctx.fillRect(snap(w.x+4-cam.x), snap(ry-cam.y), w.w-8, 3);
+  }
 }

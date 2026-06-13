@@ -96,6 +96,7 @@ function endRun(won){
     ? Math.max(0, 800 - Math.floor(time)*4) + pops*10 + (dog.spotted ? 0 : 200)
     : Math.floor(time) + pops*5;
   best = Math.max(best, score);
+  try { if(typeof localStorage !== 'undefined') localStorage.setItem('schools_best', String(best)); } catch(e){}
   showEndScreen(won, score, best, time, pops, dog.spotted);
   show("hud",false); show(won ? "win" : "gameover", true);
 }

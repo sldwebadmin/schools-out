@@ -15,6 +15,8 @@ export const POP_SPOTS = [
   [4518,2000],
   // Great Waterfront Lake (beach/boardwalk)
   [3400,6430],[5100,6465],[6200,6460],[4600,6455],
+  // Hidden trail rewards (south woods → treehouse clearing)
+  [720,5540],[720,3510],
 ];
 
 export const BIKE_SPOTS = [

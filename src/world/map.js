@@ -90,6 +90,28 @@ export function buildMap(){
   addWall(300,2140,12,14,"sign",{ghost:true,txt:"WHISPERING WOODS",txt2:"stay on the trail"});
   lamps.push({x:340,y:2220}); lamps.push({x:340,y:3800}); lamps.push({x:340,y:5200});
 
+  /* ── Treehouse Village (clearing x=900..1400, y=3060..3500) ─────── */
+  // Three treehouses
+  addWall(1070,3040,140,200,"treehouse");  // Club HQ (main, with door)
+  addWall(860,3060,110,160,"treehouse");   // Left treehouse
+  addWall(1090,3360,110,140,"treehouse");  // South treehouse
+  // Rope bridges (ghost:true — walkable, elevated visual only)
+  addWall(970,3130,100,20,"bridge",{ghost:true});   // horizontal: left → main
+  addWall(1115,3240,24,120,"bridge",{ghost:true});  // vertical: main → south
+  // Ladder visual (south face of Club HQ)
+  addWall(1108,3220,44,10,"ladder",{ghost:true});
+  // Clearing perimeter trees
+  addTree(870,3040,44);  addTree(960,3040,48);
+  addTree(1260,3040,46); addTree(1350,3040,50);
+  addTree(840,3300,46);  addTree(1260,3300,50);
+  addTree(860,3480,44);  addTree(1060,3500,46); addTree(1260,3490,48);
+  // Signs
+  addWall(2272,2912,12,14,"sign",{ghost:true,txt:"TREEHOUSE VILLAGE",txt2:"follow the trail →"});
+  addWall(710,5546,12,14,"sign",{ghost:true,txt:"what's up here?",txt2:"a trail goes north..."});
+  addWall(710,3510,12,14,"sign",{ghost:true,txt:"nice exploring!",txt2:"back entrance to the village"});
+  // Clearing lamps
+  lamps.push({x:1000,y:3160}); lamps.push({x:1260,y:3420});
+
   /* ══════════════════════════════════════════════════════
      MAPLE PARK  x=2560..4608, y=2304..3456
   ══════════════════════════════════════════════════════ */
@@ -243,4 +265,7 @@ export function buildMap(){
 
   // Snack shack — south face y=6450; door bottom y=6460
   door(6618,6438,64,22,"snackshack",160,185,{x:6650,y:6472});
+
+  // Club HQ treehouse — south face y=3240; door bottom y=3247
+  door(1100,3225,60,22,"treehouse_hq",240,150,{x:1140,y:3262});
 }

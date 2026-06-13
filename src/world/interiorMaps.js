@@ -4,6 +4,15 @@
 
 import { DAY_NUM, DAY_SEED } from '../engine/constants.js';
 
+const CHALLENGES = [
+  "Collect 5 popsicles on a run",
+  "Reach the school in under 2 minutes",
+  "Outrun Biscuit without being spotted",
+];
+const _todayChallenge = CHALLENGES[DAY_SEED % CHALLENGES.length];
+let _tbest = 0;
+try { if(typeof localStorage !== 'undefined') _tbest = parseInt(localStorage.getItem('schools_best') || '0') || 0; } catch(e){}
+
 function W(x,y,w,h,type='hedge',o={}){
   return Object.assign({x,y,w,h,type,hop:false,ghost:false},o);
 }
@@ -51,6 +60,24 @@ const MART_WALLS = [
   W(20,380,260,40,'table',{hop:true}), W(360,380,260,40,'table',{hop:true}),
 ];
 
+// ── TREEHOUSE CLUB HQ (480×300) ──────────────────────────────────────
+// Layout: mission board + score board on north wall, open floor, exit south
+// Exit: gap in south wall at x=208..272
+
+const TREEHOUSE_WALLS = [
+  W(0,0,480,20),
+  W(0,0,20,300),
+  W(460,0,20,300),
+  W(0,280,208,20), W(272,280,208,20),   // south wall with exit gap 208..272
+  // Board panels on north wall
+  W(30,20,180,30,'market'),             // mission board
+  W(250,20,200,30,'market'),            // score board
+  // Floor furniture
+  W(50,130,60,50,'house',{hop:true,hue:'#ff6b57',trim:'#ffe9c2'}),   // beanbag red
+  W(140,130,60,50,'house',{hop:true,hue:'#57b8ff',trim:'#ffe9c2'}),  // beanbag blue
+  W(300,120,140,60,'table',{hop:true}),                               // club table
+];
+
 // ── SNACK SHACK (320×240) ────────────────────────────────────────────
 // Layout: service counter north, open floor, exit south
 // Exit: gap in south wall at x=128..192
@@ -67,6 +94,25 @@ const SHACK_WALLS = [
 ];
 
 export const INTERIORS = {
+  treehouse_hq: {
+    name: "Treehouse Club HQ",
+    w: 480, h: 300,
+    bg: "#5a3e28",
+    walls: TREEHOUSE_WALLS,
+    exits: [
+      { x:208, y:270, w:64, h:30, worldTarget:{x:1140, y:3262} },
+    ],
+    interactables: [
+      { x:120, y:35, r:80, txt:"Mission Board", txt2:`Today: ${_todayChallenge}` },
+      { x:350, y:35, r:80, txt:"Score Board",   txt2:_tbest > 0 ? `Best: ${_tbest} pts` : "No score yet — go run!" },
+      { x:320, y:150, r:50, txt:"Club Table",   txt2:"Meet here daily at noon." },
+    ],
+    npcs: [
+      { kind:"kid", variant:2, wps:[[240,105]], spd:0,
+        shirt:"#a78bdb", hair:"#2b2118",
+        lines:["Welcome to the club!","Check the mission board!","We meet every day up here!"] },
+    ],
+  },
   house: {
     name: "Your House",
     w: 480, h: 360,

@@ -25,6 +25,11 @@ export function makeNPCs(){
       lines:["The water's freezing!","Best popsicle spot ever.","Biscuit won't swim either!"] },
     { kind:"kid", variant:1, wps:[[5300,6435]], spd:0, shirt:"#ff9ac1", hair:"#4a3322",
       lines:["Ice cream truck's here!","Race you to the dock!","Sandcastles later?"] },
+    // Treehouse village friends (in the clearing)
+    { kind:"kid", variant:0, wps:[[990,3310]], spd:0, shirt:"#ff9ac1", hair:"#1b1430",
+      lines:["Did you see the lake boardwalk?","Snack shack has daily popsicles!","The pond in the park has frogs!"] },
+    { kind:"kid", variant:2, wps:[[1250,3310]], spd:0, shirt:"#9ad17f", hair:"#4a3322",
+      lines:["Race you to the snack shack!","Heard about the construction site?","The woods go on forever south."] },
   ];
   for(const n of npcs){
     n.x=n.wps[0][0]; n.y=n.wps[0][1];
