@@ -16,7 +16,7 @@ export function drawCanopies(canopies, frame){
   const ctx = getCtx(), cam = getCam();
   for(const c of canopies){
     if(!inView(c.x-c.r, c.y-c.r, c.r*2, c.r*2)) continue;
-    const x = c.x - cam.x, y = c.y - cam.y, sway = Math.sin(frame*.02 + c.x)*2;
+    const x = c.x - cam.x, y = c.y - cam.y, sway = 0; // no sway — static trunks must match canopy position
     ctx.fillStyle = "#142e1b"; ctx.beginPath(); ctx.arc(x+sway, y+3, c.r+3, 0, 7); ctx.fill();
     ctx.globalAlpha = .95;
     ctx.fillStyle = "#1d4527"; ctx.beginPath(); ctx.arc(x+sway, y, c.r, 0, 7); ctx.fill();

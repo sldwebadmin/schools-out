@@ -2,15 +2,18 @@
  * tests/validate-map.js — map placement validator
  *
  * Checks every object in mapdata.js for:
- *  A. Intrusion into road / water / pond zones that must stay clear
- *  B. Solid-to-solid AABB overlap between non-ghost objects
- *  C. Any wall whose centre falls outside every declared region
- *  D. Solid (non-ghost, non-hop) wall blocking a door approach zone
+ *  A.  Intrusion into road / water / pond zones (logical AABB)
+ *  A2. Canopy circle overlapping a road / water / pond zone
+ *  B.  Solid-to-solid AABB overlap between non-ghost objects
+ *  B2. Horizontal fence picket overhang (21 px north) visually clipping a building
+ *  B3. Tree canopy circle overlapping a building's visual AABB
+ *  C.  Any wall whose centre falls outside every declared region
+ *  D.  Solid (non-ghost, non-hop) wall blocking a door approach zone
  *
  * Exit 0 = clean.  Exit 1 = issues found (fails `npm test`).
  */
 
-import { buildMap, walls, doors } from '../src/world/map.js';
+import { buildMap, walls, canopies, doors } from '../src/world/map.js';
 buildMap();
 
 // ── Geometry helpers ──────────────────────────────────────────────────
@@ -18,6 +21,18 @@ function overlap(a, b) {
   const ox = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
   const oy = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
   return { area: ox * oy, ox, oy };
+}
+// Circle-AABB distance (negative = overlap by that many px)
+function circleRectDist(cx, cy, r, rx, ry, rw, rh) {
+  const nx = Math.max(rx, Math.min(cx, rx + rw));
+  const ny = Math.max(ry, Math.min(cy, ry + rh));
+  return Math.sqrt((cx - nx) ** 2 + (cy - ny) ** 2) - r;
+}
+function regionOfPoint(x, y) {
+  for (const r of REGIONS) {
+    if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return r.name;
+  }
+  return 'Unknown';
 }
 const wcx = w => w.x + w.w / 2;
 const wcy = w => w.y + w.h / 2;
@@ -94,6 +109,23 @@ for (const z of BLOCKED_ZONES) {
 }
 
 // ═══════════════════════════════════════════════════════
+//  CHECK A2 — canopy circle overlapping road/water/pond
+// ═══════════════════════════════════════════════════════
+//
+// The validator historically only checked tree trunk AABBs.  Canopy circles
+// (r = 44–66 px) can visually cover roads even when the trunk is safely clear.
+//
+for (const z of BLOCKED_ZONES) {
+  for (const c of canopies) {
+    const d = circleRectDist(c.x, c.y, c.r, z.x, z.y, z.w, z.h);
+    if (d < 0) {
+      flag(regionOfPoint(c.x, c.y),
+        `A2: canopy@(${c.x},${c.y},r=${c.r}) overlaps "${z.zone}" by ${(-d).toFixed(0)}px`);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 //  CHECK B — solid-to-solid AABB overlap
 // ═══════════════════════════════════════════════════════
 //
@@ -116,6 +148,58 @@ for (let i = 0; i < solids.length; i++) {
     if (a.hop && b.hop && ox <= 10 && oy <= 10) continue;
     flag(regionOf(a),
       `B: ${desc(a)} overlaps ${desc(b)} by ${ox}×${oy}=${area}px²`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHECK B2 — fence picket overhang clipping a building
+// ═══════════════════════════════════════════════════════
+//
+// Horizontal fence pickets are drawn 21 px NORTH of the logical fence.y.
+// A fence placed logically just south of a building's bottom edge can still
+// have its pickets visually inside the building.
+//
+const BUILDING_TYPES = new Set(['house', 'school', 'market', 'shack', 'treehouse']);
+const hFences   = walls.filter(w => !w.ghost && w.type === 'fence' && w.w >= w.h);
+const buildings = walls.filter(w => !w.ghost && BUILDING_TYPES.has(w.type));
+const FENCE_PICKET_OVERHANG = 21; // px north of fence.y that pickets reach
+
+for (const f of hFences) {
+  const fVisTop = f.y - FENCE_PICKET_OVERHANG;
+  for (const b of buildings) {
+    const bBottom = b.y + b.h;
+    if (fVisTop < bBottom && f.y >= bBottom) {
+      const xov = Math.min(f.x + f.w, b.x + b.w) - Math.max(f.x, b.x);
+      if (xov > 0) {
+        flag(regionOf(f),
+          `B2: fence@(${f.x},${f.y}) pickets reach y=${fVisTop}, ${bBottom - fVisTop}px into ${desc(b)}`);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHECK B3 — tree canopy overlapping a building visual
+// ═══════════════════════════════════════════════════════
+//
+// Canopies are drawn last (on top of everything).  A tree canopy that visually
+// covers a building produces the "drifting tree on the roof" artifact.
+// Use the building's visual AABB (which extends 8–16 px beyond the logical box).
+//
+const BLDG_VIS = { house:{l:8,r:8,t:16,b:16}, school:{l:10,r:10,t:14,b:0},
+                   market:{l:8,r:8,t:12,b:0}, shack:{l:8,r:8,t:10,b:0},
+                   treehouse:{l:0,r:0,t:16,b:0} };
+
+for (const c of canopies) {
+  for (const b of buildings) {
+    const pad = BLDG_VIS[b.type] || {l:0,r:0,t:0,b:0};
+    const vx = b.x - pad.l, vy = b.y - pad.t;
+    const vw = b.w + pad.l + pad.r, vh = b.h + pad.t + pad.b;
+    const d = circleRectDist(c.x, c.y, c.r, vx, vy, vw, vh);
+    if (d < 0) {
+      flag(regionOfPoint(c.x, c.y),
+        `B3: canopy@(${c.x},${c.y},r=${c.r}) overlaps visual of ${desc(b)} by ${(-d).toFixed(0)}px`);
+    }
   }
 }
 
