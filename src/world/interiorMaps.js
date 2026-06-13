@@ -58,7 +58,7 @@ export const INTERIORS = {
     bg: "#4a3828",          // warm wood floor base
     walls: HOUSE_WALLS,
     exits: [
-      { x:208, y:330, w:64, h:30, worldTarget:{x:4096, y:7700} },
+      { x:208, y:330, w:64, h:30, worldTarget:{x:3955, y:5932} },
     ],
     interactables: [
       { x:95,  y:65,  r:52, txt:"Your bed.",           txt2:"Nap later — it's summer!" },
@@ -74,7 +74,7 @@ export const INTERIORS = {
     bg: "#cfc6e8",          // white-ish tile floor
     walls: MART_WALLS,
     exits: [
-      { x:288, y:450, w:64, h:30, worldTarget:{x:6920, y:2820} },
+      { x:288, y:450, w:64, h:30, worldTarget:{x:6640, y:3355} },
     ],
     interactables: [
       { x:155, y:45,  r:56, txt:"Freezer",             txt2:"Free daily popsicle — take one!", pickup:"pop", _key:`mart_pop_${DAY_SEED}` },

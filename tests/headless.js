@@ -78,15 +78,15 @@ try {
   for(let i = 0; i < 300; i++) stepFrame();
   keys.ShiftLeft = false;
 
-  // Phase 3: teleport near NAPS[0] {x:3700, y:6550} (Biscuit's doghouse) to wake dog
+  // Phase 3: teleport near NAPS[0] {x:3480, y:4760} (Biscuit's doghouse) to wake dog
   // Place player 200px west — within the 240px wake radius
-  player.x = 3500; player.y = 6550;
+  player.x = 3280; player.y = 4760;
   keys.KeyA = true; keys.KeyW = false; keys.KeyD = false; // run west (away from dog)
   for(let i = 0; i < 600; i++) stepFrame();
   keys.KeyA = false;
 
-  // Phase 4: teleport to park area, run north through school to goal (45 sec)
-  player.x = 4096; player.y = 3000;
+  // Phase 4: teleport to south of school, run north to goal at (5200,1600)
+  player.x = 5200; player.y = 2500;
   keys.KeyW = true; keys.KeyD = false;
   for(let i = 0; i < 2700; i++) stepFrame();
 
@@ -94,10 +94,10 @@ try {
   console.log('Gameplay simulation: 5400 frames completed without runtime error');
 
   // Phase 5: interior enter/exit cycle
-  // House wall south face = y+7690. Door (3658,7678,64,22) extends to y=7700.
-  // Stand at y=7706 (16px south of wall, r=12 → no collision push) inside door zone.
+  // House: yard(3760,5630,440,360) → hx=3855, hy=5730, south=5900.
+  // Door (3923,5888,64,22) extends to y=5910. Stand at y=5915 (15px south of wall).
   startRun(); // reset to overworld
-  player.x = 3690; player.y = 7706;
+  player.x = 3955; player.y = 5915;
   keys.KeyW = false; keys.KeyS = false; keys.KeyA = false; keys.KeyD = false;
   // Step enough frames for fade-out (30) + swap + fade-in (30) = 60 frames
   for(let i = 0; i < 90; i++) stepFrame();

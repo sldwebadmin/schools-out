@@ -340,11 +340,11 @@ export function draw(){
   drawChunks(ctx, cam.x, cam.y);
   evictChunks(cam.x, cam.y);
 
-  /* pond shimmer (park pond: centre 4000,2600) */
-  if(inView(3764, 2470, 472, 260)){
+  /* pond shimmer (park pond: centre 3200,2750) */
+  if(inView(2964, 2620, 472, 260)){
     for(let i=0;i<7;i++){
-      const sx = 4000 + Math.sin(frame*.02 + i*1.7)*160*Math.cos(i);
-      const sy = 2600 + Math.cos(frame*.017 + i*2.3)*78*Math.sin(i*1.3);
+      const sx = 3200 + Math.sin(frame*.02 + i*1.7)*160*Math.cos(i);
+      const sy = 2750 + Math.cos(frame*.017 + i*2.3)*78*Math.sin(i*1.3);
       ctx.fillStyle = "rgba(255,220,150," + (.10 + .08*Math.sin(frame*.05+i)) + ")";
       ctx.fillRect(snap(sx-cam.x), snap(sy-cam.y), 16, PX);
     }

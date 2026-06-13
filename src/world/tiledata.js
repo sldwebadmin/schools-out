@@ -7,7 +7,7 @@ import { WORLD, TILE, RX, HY1, HY2 } from '../engine/constants.js';
 export const ZONE = {
   MEADOW:1, FOREST:2, LAWN:3, SCHOOL:4, BLACKTOP:5,
   SANDBOX:6, ROAD:7, SIDEWALK:8, DIRT:9, POND:10,
-  GARDEN:11, COURT:12, MARKET:13,
+  GARDEN:11, COURT:12, MARKET:13, WATER:14, GRAVEL:15,
 };
 
 export const ZONE_COLORS = [
@@ -25,59 +25,78 @@ export const ZONE_COLORS = [
   '#6b4a2f',  // 11 GARDEN
   '#3a3760',  // 12 COURT
   '#3f3a60',  // 13 MARKET
+  '#1f4a63',  // 14 WATER (lake)
+  '#7a6a50',  // 15 GRAVEL (construction)
 ];
 
+// regionAt: order matters — more specific regions first (water tower before athletic)
 export function regionAt(x, y) {
-  if(x>=2976 && x<5216 && y>=128  && y<1728) return 'School District';
-  if(x>=0    && x<3200 && y>=2048 && y<4608) return 'Whispering Woods';
-  if(x>=3200 && x<5760 && y>=2048 && y<3648) return 'Maple Park';
-  if(x>=5952 && x<8192 && y>=2048 && y<3968) return 'Maple Mart';
-  if(x>=2816 && x<5376 && y>=5376 && y<7936) return 'Maple Court';
+  if(x>=6656 && x<7680 && y>=512  && y<1536) return 'Water Tower';
+  if(x>=6336 && x<7360 && y>=1024 && y<2112) return 'Athletic Fields';
+  if(x>=4096 && x<6336 && y>=512  && y<2112) return 'School District';
+  if(x>=256  && x<2304 && y>=2048 && y<5632) return 'Whispering Woods';
+  if(x>=2560 && x<4608 && y>=2304 && y<3456) return 'Maple Park';
+  if(x>=5632 && x<7872 && y>=2560 && y<4480) return 'Maple Mart District';
+  if(x>=2560 && x<5120 && y>=3584 && y<6144) return 'Maple Court';
+  if(x>=512  && x<2048 && y>=512  && y<1792) return 'Construction Site';
+  if(x>=256  && x<2304 && y>=5888 && y<7936) return 'Meadow Reserve';
+  if(x>=2560 && x<7936 && y>=6400 && y<7936) return 'Great Waterfront Lake';
   return null;
 }
 
 export function zoneAt(px, py) {
-  // Shopping (market interior)
-  if(px>=5952 && px<8192 && py>=2048 && py<3968) return ZONE.MARKET;
+  // Water tower (inside school/athletic area)
+  if(px>=6656 && px<7680 && py>=512 && py<1536) return ZONE.LAWN;
+  // Athletic fields
+  if(px>=6336 && px<7360 && py>=1024 && py<2112) return ZONE.LAWN;
+  // Great Waterfront Lake (water)
+  if(px>=2560 && px<7936 && py>=6480 && py<7936) return ZONE.WATER;
+  // Lake sand strip
+  if(px>=2560 && px<7936 && py>=6400 && py<6480) return ZONE.SANDBOX;
+  // Construction site
+  if(px>=512 && px<2048 && py>=512 && py<1792) return ZONE.GRAVEL;
+  // Shopping district
+  if(px>=5632 && px<7872 && py>=2560 && py<4480) return ZONE.MARKET;
   // Basketball court (neighbourhood)
-  if(px>=4700 && px<4960 && py>=5480 && py<5680) return ZONE.COURT;
+  if(px>=4700 && px<4960 && py>=3700 && py<3900) return ZONE.COURT;
   // Community garden (park)
-  if(px>=4950 && px<5230 && py>=3100 && py<3370) return ZONE.GARDEN;
-  // Cul-de-sac circle (centre 4096,7680 r=150)
-  const cdx=px+16-4096, cdy=py+16-7680;
+  if(px>=4054 && px<4334 && py>=3132 && py<3402) return ZONE.GARDEN;
+  // Cul-de-sac circle (centre 4518,5888 r=150)
+  const cdx=px+16-4518, cdy=py+16-5888;
   if(cdx*cdx+cdy*cdy < 150*150) return ZONE.ROAD;
-  // Pond ellipse (centre 4000,2600 rx=218 ry=112)
-  const pex=(px+16-4000)/218, pey=(py+16-2600)/112;
+  // Pond ellipse (centre 3200,2750 rx=218 ry=112)
+  const pex=(px+16-3200)/218, pey=(py+16-2750)/112;
   if(pex*pex+pey*pey < 1) return ZONE.POND;
-  // Dirt paths
-  if(px>=3990&&px<4050&&py>=2740&&py<3000) return ZONE.DIRT;
-  if(px>=4220&&px<4500&&py>=2574&&py<2634) return ZONE.DIRT;
-  if(px>=4230&&px<4290&&py>=1728&&py<2048) return ZONE.DIRT;
-  if(px>=4230&&px<4290&&py>=3648&&py<5376) return ZONE.DIRT;
-  // Shop spur road (4166..5952, y=3100..3240)
-  if(px>=4166&&px<5952&&py>=3100&&py<3240) return ZONE.ROAD;
+  // Dirt paths in park
+  if(px>=3190&&px<3250&&py>=2890&&py<3150) return ZONE.DIRT;
+  if(px>=3220&&px<3500&&py>=2724&&py<2784) return ZONE.DIRT;
+  // Dirt bike paths (connector)
+  if(px>=2304&&px<2364&&py>=2048&&py<3456) return ZONE.DIRT;
+  // Shop connector road (HY1 extended east into shopping)
+  if(px>=4588&&px<5632&&py>=HY1&&py<HY1+140) return ZONE.ROAD;
   // Main N-S road
-  if(px>=RX&&px<RX+140&&py>=1600&&py<7680) return ZONE.ROAD;
+  if(px>=RX&&px<RX+140&&py>=512&&py<5888) return ZONE.ROAD;
   // Neighbourhood horizontal roads
-  if(px>=2816&&px<5376&&py>=HY1&&py<HY1+140) return ZONE.ROAD;
-  if(px>=2816&&px<5376&&py>=HY2&&py<HY2+140) return ZONE.ROAD;
+  if(px>=2560&&px<5120&&py>=HY1&&py<HY1+140) return ZONE.ROAD;
+  if(px>=2560&&px<5120&&py>=HY2&&py<HY2+140) return ZONE.ROAD;
   // Sidewalks (main road sides through neighbourhood)
-  if(px>=3998&&px<4026&&py>=5376&&py<7680) return ZONE.SIDEWALK;
-  if(px>=4166&&px<4194&&py>=5376&&py<7680) return ZONE.SIDEWALK;
-  if(px>=2816&&px<5376&&py>=6212&&py<6240) return ZONE.SIDEWALK;
-  if(px>=2816&&px<5376&&py>=6380&&py<6408) return ZONE.SIDEWALK;
-  if(px>=2816&&px<5376&&py>=6692&&py<6720) return ZONE.SIDEWALK;
-  if(px>=2816&&px<5376&&py>=6860&&py<6888) return ZONE.SIDEWALK;
-  // Blacktop and sandbox (inside school)
-  if(px>=3200&&px<3700&&py>=1080&&py<1360) return ZONE.BLACKTOP;
-  if(px>=4640&&px<4880&&py>=1050&&py<1160) return ZONE.SANDBOX;
+  if(px>=4420&&px<4448&&py>=3584&&py<5888) return ZONE.SIDEWALK;
+  if(px>=4588&&px<4616&&py>=3584&&py<5888) return ZONE.SIDEWALK;
+  if(px>=2560&&px<5120&&py>=HY1-28&&py<HY1) return ZONE.SIDEWALK;
+  if(px>=2560&&px<5120&&py>=HY1+140&&py<HY1+168) return ZONE.SIDEWALK;
+  if(px>=2560&&px<5120&&py>=HY2-28&&py<HY2) return ZONE.SIDEWALK;
+  if(px>=2560&&px<5120&&py>=HY2+140&&py<HY2+168) return ZONE.SIDEWALK;
+  // Blacktop and sandbox (inside school SW corner)
+  if(px>=4320&&px<4820&&py>=1200&&py<1480) return ZONE.BLACKTOP;
+  if(px>=5760&&px<6000&&py>=1170&&py<1280) return ZONE.SANDBOX;
   // School district
-  if(px>=2976&&px<5216&&py>=128&&py<1728) return ZONE.SCHOOL;
+  if(px>=4096&&px<6336&&py>=512&&py<2112) return ZONE.SCHOOL;
   // Whispering Woods
-  if(px>=0&&px<3200&&py>=2048&&py<4608) return ZONE.FOREST;
-  // Park and neighbourhood (lawn)
-  if(px>=3200&&px<5760&&py>=2048&&py<3648) return ZONE.LAWN;
-  if(px>=2816&&px<5376&&py>=5376&&py<7936) return ZONE.LAWN;
+  if(px>=256&&px<2304&&py>=2048&&py<5632) return ZONE.FOREST;
+  // Park (lawn)
+  if(px>=2560&&px<4608&&py>=2304&&py<3456) return ZONE.LAWN;
+  // Neighbourhood (lawn)
+  if(px>=2560&&px<5120&&py>=3584&&py<6144) return ZONE.LAWN;
   return ZONE.MEADOW;
 }
 
