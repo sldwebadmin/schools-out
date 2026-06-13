@@ -152,10 +152,12 @@ export function bakeGroundInto(g, wx0, wy0) {
   dirt(2304,2900,256,60);
   // Park north → school south connector
   dirt(4490,2112,60,192);
-  // Main trail: east entry west to treehouse village (y=2900, x=1380..2304)
+  // Treehouse trail: main road (x=4420) west through park then woods to clearing
+  dirt(2560,2900,1860,50);   // through park x=2560..4420, y=2900..2950
+  // Inside woods: east entry continuing west to clearing
   dirt(1380,2900,924,50);
   dirt(1380,2900,50,200);    // south spur to clearing
-  dirt(1100,3060,340,50);    // west into clearing
+  dirt(1100,3060,340,50);    // west connector into clearing
   // Hidden south trail (narrow, rewards exploration from south woods/meadow)
   dirt(700,3500,40,2060);    // y=3500..5560, x=700..740
   dirt(500,5540,260,50);     // east-west connector at south end

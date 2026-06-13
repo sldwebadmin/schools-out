@@ -34,6 +34,7 @@ export function regionAt(x, y) {
   if(x>=6656 && x<7680 && y>=512  && y<1536) return 'Water Tower';
   if(x>=6336 && x<7360 && y>=1024 && y<2112) return 'Athletic Fields';
   if(x>=4096 && x<6336 && y>=512  && y<2112) return 'School District';
+  if(x>=900  && x<1400  && y>=3060 && y<3500) return 'Treehouse Village';
   if(x>=256  && x<2304 && y>=2048 && y<5632) return 'Whispering Woods';
   if(x>=2560 && x<4608 && y>=2304 && y<3456) return 'Maple Park';
   if(x>=5632 && x<7872 && y>=2560 && y<4480) return 'Maple Mart District';

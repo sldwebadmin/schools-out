@@ -125,6 +125,9 @@ export function buildMap(){
   addTree(2600,2700,58); addTree(2780,3000,54); addTree(2600,3200,56);
   addTree(4440,2380,52); addTree(4500,3300,56); addTree(4000,3350,52);
   lamps.push({x:3200,y:2400}); lamps.push({x:4100,y:3300});
+  // Treehouse trail markers (along y=2920 from main road west to woods)
+  addWall(4390,2912,12,14,"sign",{ghost:true,txt:"TREEHOUSE VILLAGE",txt2:"follow the trail west"});
+  lamps.push({x:4380,y:2920}); lamps.push({x:3500,y:2920}); lamps.push({x:2600,y:2920});
 
   /* ══════════════════════════════════════════════════════
      MAPLE MART (SHOPPING)  x=5632..7872, y=2560..4480
