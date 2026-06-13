@@ -60,13 +60,12 @@ function flag(region, msg) {
 //  CHECK A — road / water / pond intrusions
 // ═══════════════════════════════════════════════════════
 //
-// "Main Road (park)" starts at y=2100 — south of the school south fence
-// (y=2080+10=2090), which is intentional design (players must use the gate
-// at x=5100..5280 to enter the campus, not drive straight through).
+// Road stops at school boundary (y=2112) — campus grounds are grass, not road.
+// See bake.js: road(RX,2112,140,4288).
 //
 const BLOCKED_ZONES = [
-  // Main N-S road — park section (school fence to neighbourhood)
-  { zone: 'Main Road (park→school)',    x: 4448, y: 2100, w: 140, h: 1484 },
+  // Main N-S road — park section (school boundary to neighbourhood)
+  { zone: 'Main Road (park→school)',    x: 4448, y: 2112, w: 140, h: 1472 },
   // Main N-S road — neighbourhood section
   { zone: 'Main Road (neighbourhood)', x: 4448, y: 3584, w: 140, h: 2806 },
   // HY1 cross-street
@@ -80,15 +79,11 @@ const BLOCKED_ZONES = [
 ];
 // These wall types define the zone themselves — don't flag them
 const ZONE_SELF = new Set(['water', 'pond']);
-// School perimeter fences touching the road are intentional (gate design)
-const SCHOOL_FENCE_Y = new Set([532, 2080]);
 
 for (const z of BLOCKED_ZONES) {
   for (const w of walls) {
     if (w.ghost) continue;
     if (ZONE_SELF.has(w.type)) continue;
-    // School perimeter fences are intentional at the road — skip
-    if (w.type === 'fence' && SCHOOL_FENCE_Y.has(w.y)) continue;
 
     const { area, ox, oy } = overlap(w, z);
     if (area > 0) {

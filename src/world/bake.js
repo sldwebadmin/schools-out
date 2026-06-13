@@ -100,12 +100,12 @@ export function bakeGroundInto(g, wx0, wy0) {
   /* ── 5. School district (4096..6336, 512..2112) ──────────────────── */
   g.fillStyle="#467a4d"; g.fillRect(4096,512,2240,1600);
   tex(4096,512,6336,2112, 400, "#4f8757","#3e6c45", 6,4);
-  // Blacktop playground (SW of school south)
-  g.fillStyle="#55517a"; g.fillRect(4320,1200,500,280);
+  // Blacktop playground — south of gym (y=1184..1424), clear of building footprint
+  g.fillStyle="#55517a"; g.fillRect(4320,1440,500,280);
   g.strokeStyle="#cfc6e8"; g.lineWidth=4;
-  g.strokeRect(4400,1240,140,140);
-  g.beginPath(); g.moveTo(4470,1240); g.lineTo(4470,1380);
-  g.moveTo(4400,1310); g.lineTo(4540,1310); g.stroke();
+  g.strokeRect(4400,1480,140,140);
+  g.beginPath(); g.moveTo(4470,1480); g.lineTo(4470,1620);
+  g.moveTo(4400,1550); g.lineTo(4540,1550); g.stroke();
   // Sandbox
   g.fillStyle="#d9c08c"; g.fillRect(5760,1170,240,110);
   tex(5760,1170,6000,1280, 54, "#cdb27c","#e3cd9d", 5,4);
@@ -253,7 +253,7 @@ export function bakeGroundInto(g, wx0, wy0) {
   sidewalk(2560,HY2-28,2560,28); sidewalk(2560,HY2+140,2560,28); // HY2 flanks
 
   /* ── 12. Roads ───────────────────────────────────────────────────── */
-  road(RX,512,140,5888);               // main N-S road y=512..6400
+  road(RX,2112,140,4288);              // main N-S road y=2112..6400 (stops at school boundary)
   road(2560,HY1,2560,140);             // neighbourhood horizontal 1
   road(2560,HY2,2560,140);             // neighbourhood horizontal 2
 
@@ -265,7 +265,7 @@ export function bakeGroundInto(g, wx0, wy0) {
 
   /* ── 14. Road markings ───────────────────────────────────────────── */
   g.fillStyle="#8d80b8";
-  for(let y=532;y<6380;y+=64) g.fillRect(RX+66,y,8,28);            // main road dashes
+  for(let y=2116;y<6380;y+=64) g.fillRect(RX+66,y,8,28);           // main road dashes
   for(let x=2584;x<5104;x+=64) g.fillRect(x,HY1+66,28,8);          // HY1 dashes
   for(let x=2584;x<5104;x+=64) g.fillRect(x,HY2+66,28,8);          // HY2 dashes
   for(let x=4612;x<5616;x+=64) g.fillRect(x,HY1+66,28,8);          // connector dashes
