@@ -8,6 +8,7 @@ All game art is original procedural drawing (HTML5 Canvas API). No external asse
 | src/world/tilerender.js | Tile-map ground renderer | Original | CC0 / Public Domain (original work) |
 | src/render/sheet.js | Sprite sheets (player, 3 NPC variants, Biscuit) | Programmatically generated — original art drawn with Canvas 2D API at 3 px pixel grid | CC0 / Public Domain (original work) |
 | src/render/sprites.js | Rectangle fallback renderer | Original | CC0 / Public Domain (original work) |
+| src/render/buildsprites.js | Pre-baked building sprite canvases (house, school, market, shack, treehouse) | Programmatically generated — original pixel art drawn with Canvas 2D API, Stage-2 addition: upper windows | CC0 / Public Domain (original work) |
 | src/render/props.js | World prop renderer | Original | CC0 / Public Domain (original work) |
 | src/audio/synth.js | Synthesized music & SFX | Original (WebAudio) | CC0 / Public Domain (original work) |
 

@@ -1,9 +1,19 @@
-import { PX } from '../engine/constants.js';
+import { PX, USE_SHEETS } from '../engine/constants.js';
 import { snap, rectW, outline, getCtx, getCam } from './draw.js';
+import { getBuildingSprite } from './buildsprites.js';
 
 export function drawWall(w, frame){
   const ctx = getCtx(), cam = getCam();
   const T = w.type;
+
+  // Pre-baked building sprite (USE_SHEETS mode)
+  if(USE_SHEETS && !w.ghost){
+    const sp = getBuildingSprite(w);
+    if(sp){
+      ctx.drawImage(sp.canvas, snap(w.x - cam.x + sp.ox), snap(w.y - cam.y + sp.oy));
+      return;
+    }
+  }
   if(T === "house"){
     const FW = 48;
     rectW(w.hue, w.x, w.y + w.h - FW, w.w, FW);
