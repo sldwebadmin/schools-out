@@ -140,6 +140,7 @@ const required = [
   'src/audio/synth.js',
   'src/world/map.js', 'src/world/bake.js', 'src/world/minimap.js',
   'src/world/chunks.js', 'src/world/tiledata.js', 'src/world/interiorMaps.js',
+  'src/world/tilecache.js', 'src/world/tilerender.js',
   'src/entities/npcs.js', 'src/entities/pickups.js',
   'src/entities/player.js', 'src/entities/dog.js',
   'src/render/draw.js', 'src/render/props.js',

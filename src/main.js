@@ -1,5 +1,6 @@
 import { VW, VH, PX, WORLD, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
 import { buildSheets } from './render/sheet.js';
+import { buildTileset } from './world/tilecache.js';
 import { R, RI, clamp } from './engine/utils.js';
 import { audio, startMusic, toggleMusic, sfx, iceCreamTruck } from './audio/synth.js';
 import { keys, setupKeyboard } from './engine/input.js';
@@ -598,7 +599,7 @@ export function init(){
   initDraw(ctx, cam);
 
   buildMap(); buildGrid(walls); initChunks(); bakeMini(); resetRun();
-  if(USE_SHEETS) buildSheets();
+  if(USE_SHEETS){ buildSheets(); buildTileset(); }
 
   setupKeyboard(
     () => { state === "run" ? tryHop() : start(); },

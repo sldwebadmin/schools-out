@@ -4,6 +4,8 @@ All game art is original procedural drawing (HTML5 Canvas API). No external asse
 
 | File | Type | Source | License |
 |------|------|--------|---------|
+| src/world/tilecache.js | Ground tile textures (15 zone types × 4 variants, 32×32 px each) | Programmatically generated — original pixel art drawn with Canvas 2D API | CC0 / Public Domain (original work) |
+| src/world/tilerender.js | Tile-map ground renderer | Original | CC0 / Public Domain (original work) |
 | src/render/sheet.js | Sprite sheets (player, 3 NPC variants, Biscuit) | Programmatically generated — original art drawn with Canvas 2D API at 3 px pixel grid | CC0 / Public Domain (original work) |
 | src/render/sprites.js | Rectangle fallback renderer | Original | CC0 / Public Domain (original work) |
 | src/render/props.js | World prop renderer | Original | CC0 / Public Domain (original work) |
