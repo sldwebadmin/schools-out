@@ -278,8 +278,32 @@ export function buildMap(){
   // Site lamps
   lamps.push({x:1280,y:640}); lamps.push({x:790,y:1250});
 
-  // Athletic fields (east of school, x=6336..7360, y=1024..2112)
-  addWall(6336,1024,12,14,"sign",{ghost:true,txt:"ATHLETIC FIELDS",txt2:"FIELDS UNDER PREP"});
+  /* ══ Athletic Fields (x=6336..7360, y=1024..2112) — built ══ */
+  // Perimeter fences (hop:true) — north, east, south; west is open (school boundary)
+  fence(6336,1024,1024,true,[[380,540]]); // north fence, gap for entry from school
+  fence(6336,2102,1024,true,[]);          // south fence
+  fence(7330,1024,1078,false,[]);         // east fence
+
+  // Entry sign
+  addWall(6336,1024,12,14,"sign",{ghost:true,txt:"ATHLETIC FIELDS",txt2:"all athletes welcome"});
+
+  // Soccer goals (solid — realistic obstacle at field ends)
+  addWall(6538,1026,120,54,"goal");  // north soccer goal
+  addWall(6538,2060,120,54,"goal");  // south soccer goal
+
+  // Baseball backstop (solid chain-link behind home plate)
+  addWall(6998,1578,124,42,"backstop");
+
+  // Bleachers (east side, hop:true — popsicle hidden inside)
+  addWall(7278,1062,60,458,"bleacher",{hop:true});
+
+  // Water fountain (ghost — player walks near it)
+  addWall(6862,1952,42,42,"fountain",{ghost:true});
+
+  // Field lamps (corners + center)
+  lamps.push({x:6380,y:1080}); lamps.push({x:6820,y:1080});
+  lamps.push({x:7060,y:1080}); lamps.push({x:7060,y:2080});
+  lamps.push({x:6380,y:2080}); lamps.push({x:6820,y:2080});
 
   // Water tower overlook (x=6656..7680, y=512..1536)
   addWall(6700,560,12,14,"sign",{ghost:true,txt:"WATER TOWER",txt2:"CLIMB AT YOUR OWN RISK"});

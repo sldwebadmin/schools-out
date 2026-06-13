@@ -32,6 +32,16 @@ let insideMap = null, interiorNPCs = [], interactText = null;
 let doorCooldown = 0, savedDogMode = 'sleep';
 let joy = null, sprintHeld = false;
 
+// Oscillating sprinklers — athletic fields hazard (each sweeps an arc, wets player+dog)
+const SPRINKLERS = [
+  {x:6450, y:1200, a:0.5,  dir:1,  spd:.017, min:-0.3, max:1.3, r:90},
+  {x:6622, y:1900, a:2.8,  dir:-1, spd:.021, min:1.8,  max:3.8, r:88},
+  {x:7022, y:1102, a:1.8,  dir:1,  spd:.016, min:0.8,  max:2.8, r:86},
+  {x:7152, y:1852, a:4.0,  dir:-1, spd:.020, min:3.0,  max:5.0, r:92},
+];
+// Ball arcing between the two catch-playing kids in the baseball outfield
+const catchBall = {phase:0, dir:1, ax:6910, ay:1182, bx:7110, by:1182};
+
 function fit(){
   const s = Math.min(innerWidth / VW, innerHeight / VH);
   cv.style.width  = Math.floor(VW * s) + "px";
@@ -126,6 +136,7 @@ export function update(){
   }
   if(player.hop > 0){ player.hop--; spd *= 1.25; }
   if(player.hopCd > 0) player.hopCd--;
+  if(player.wet > 0){ spd *= 0.65; player.wet--; } // sprinkler slowdown
   player.vx = mx*spd; player.vy = my*spd;
   moveActor(player, player.vx, player.vy, player.hop > 0);
   if(player.hop === 0){ const b = blocked(player.x, player.y, player.r, false); if(b && b.hop) player.hop = 4; }
@@ -195,7 +206,8 @@ export function update(){
     dog.alert--;
     if(dog.alert <= 0){ dog.mode = "chase"; setDogLabel("Biscuit"); }
   } else {
-    const dSpd = 3.1 + Math.min(1.5, time * .012);
+    let dSpd = 3.1 + Math.min(1.5, time * .012);
+    if(dog.wet > 0){ dSpd *= 0.65; dog.wet--; } // sprinkler slows dog too
     let tx = player.x + player.vx*14 - dog.x, ty = player.y + player.vy*14 - dog.y;
     const tl = Math.hypot(tx, ty) || 1; tx/=tl; ty/=tl;
     if(dog.crouch > 0){
@@ -238,6 +250,31 @@ export function update(){
       if(USE_SHEETS) n.dir = player.x >= n.x ? 2 : 1;
     }
   }
+
+  /* sprinklers — oscillate sweep angle, apply wet to player + dog */
+  for(const s of SPRINKLERS){
+    s.a += s.spd * s.dir;
+    if(s.a > s.max){ s.a = s.max; s.dir = -1; }
+    else if(s.a < s.min){ s.a = s.min; s.dir = 1; }
+    const check = (actor, isPlayer) => {
+      const dx = actor.x - s.x, dy = actor.y - s.y;
+      const d = Math.hypot(dx, dy);
+      if(d < s.r && d > 8){
+        let da = Math.atan2(dy, dx) - s.a;
+        da = ((da % (Math.PI*2)) + Math.PI*3) % (Math.PI*2) - Math.PI;
+        if(Math.abs(da) < 0.42){
+          if(isPlayer && !actor.wet) burst(actor.x, actor.y, "rgba(120,200,255,.8)");
+          actor.wet = 52;
+        }
+      }
+    };
+    check(player, true);
+    if(dog.mode === "chase") check(dog, false);
+  }
+  /* catch ball — arc between two kids in the baseball outfield */
+  catchBall.phase += 0.013 * catchBall.dir;
+  if(catchBall.phase >= 1){ catchBall.phase = 1; catchBall.dir = -1; }
+  else if(catchBall.phase <= 0){ catchBall.phase = 0; catchBall.dir = 1; }
 
   /* pickups */
   for(const p of pickups){
@@ -384,8 +421,47 @@ export function draw(){
   for(const n of npcs) if(inView(n.x-26,n.y-50,52,60)) ents.push({y: n.y, f: () => drawNPC(n, frame)});
   ents.push({y: player.y + 1, f: () => drawPlayer(player, frame)});
   if(inView(dog.x-34,dog.y-44,68,64)) ents.push({y: dog.y, f: () => drawDog(dog, frame)});
+  // Catch ball — arcs between two kids in the baseball outfield
+  if(inView(catchBall.ax - 20, catchBall.ay - 50, (catchBall.bx - catchBall.ax) + 40, 70)){
+    const t = catchBall.phase;
+    const cx = catchBall.ax + (catchBall.bx - catchBall.ax) * t;
+    const gY = catchBall.ay + (catchBall.by - catchBall.ay) * t;
+    const arcY = gY - Math.sin(t * Math.PI) * 40; // arc peaks north
+    const sh = 1 - Math.sin(t * Math.PI);         // shadow shrinks at peak
+    ents.push({y: gY, f: () => {
+      // shadow (on ground)
+      ctx.fillStyle = `rgba(0,0,0,${(0.28 * sh).toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(snap(cx-cam.x), snap(gY-cam.y), Math.max(2, (6*sh)|0), 0, 7); ctx.fill();
+      // ball (arc position)
+      ctx.fillStyle = "#d49a50";
+      ctx.beginPath(); ctx.arc(snap(cx-cam.x), snap(arcY-cam.y), 5, 0, 7); ctx.fill();
+      ctx.strokeStyle = "#a06030"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(snap(cx-cam.x), snap(arcY-cam.y), 5, 0, 7); ctx.stroke();
+      ctx.strokeStyle = "#cc4444"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(snap(cx-cam.x), snap(arcY-cam.y), 3, 0.3, 1.1); ctx.stroke();
+      ctx.beginPath(); ctx.arc(snap(cx-cam.x), snap(arcY-cam.y), 3, Math.PI+.3, Math.PI+1.1); ctx.stroke();
+    }});
+  }
   ents.sort((a,b) => a.y - b.y);
   for(const e of ents) e.f();
+
+  /* sprinkler spray — drawn after entities so mist overlays the scene */
+  for(const s of SPRINKLERS){
+    if(!inView(s.x - 110, s.y - 110, 220, 220)) continue;
+    for(let i = 0; i < 14; i++){
+      const t = ((frame * 0.06 + i / 14) % 1);
+      const ang = s.a + (i / 14 - 0.5) * 0.78;
+      const dist = t * s.r;
+      const wx = s.x + Math.cos(ang) * dist;
+      const wy = s.y + Math.sin(ang) * dist;
+      const alpha = (0.48 * t * (1 - t * 0.55)).toFixed(2);
+      ctx.fillStyle = `rgba(120,200,255,${alpha})`;
+      ctx.fillRect(snap(wx - cam.x), snap(wy - cam.y), PX + 1, PX + 1);
+    }
+    // Sprinkler head
+    ctx.fillStyle = "#6a7a70";
+    ctx.fillRect(snap(s.x - 3 - cam.x), snap(s.y - 3 - cam.y), 6, 6);
+  }
 
   drawCanopies(canopies, frame);
   drawFireflies(flies, frame);

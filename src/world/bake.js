@@ -116,13 +116,75 @@ export function bakeGroundInto(g, wx0, wy0) {
   g.setLineDash([10,8]); g.lineWidth=3;
   g.strokeRect(4340,620,120,120); g.setLineDash([]);
 
-  /* ── 6. Athletic fields (6336..7360, 1024..2112) — reserved ─────── */
+  /* ── 6. Athletic fields (6336..7360, 1024..2112) — built ─────── */
   g.fillStyle="#4c7a4f"; g.fillRect(6336,1024,1024,1088);
-  tex(6336,1024,7360,2112, 200, "#56885a","#447047", 6,4);
-  // Field lines
-  g.strokeStyle="rgba(255,255,255,.25)"; g.lineWidth=3; g.setLineDash([]);
-  g.strokeRect(6400,1060,900,960);
-  g.beginPath(); g.moveTo(6400,1540); g.lineTo(7300,1540); g.stroke();
+  tex(6336,1024,7360,2112, 300, "#56885a","#447047", 6,4);
+  // Mow stripes (alternating shade)
+  g.fillStyle="rgba(0,0,0,.07)";
+  for(let sy=1024; sy<2112; sy+=62){
+    if(Math.floor((sy-1024)/62)%2===0) g.fillRect(6336,sy,524,62);
+  }
+  // === Soccer field (x=6336..6860) ===
+  g.strokeStyle="rgba(255,255,255,.8)"; g.lineWidth=4; g.setLineDash([]);
+  g.strokeRect(6372,1062,454,998);              // outer boundary
+  g.beginPath(); g.moveTo(6372,1561); g.lineTo(6826,1561); g.stroke(); // center line
+  g.beginPath(); g.arc(6599,1561,62,0,7); g.stroke();                  // center circle
+  g.strokeRect(6452,1062,296,88);               // north penalty box
+  g.strokeRect(6452,1972,296,88);               // south penalty box
+  g.lineWidth=2;
+  g.strokeRect(6502,1062,196,48);               // north goal area
+  g.strokeRect(6502,2012,196,48);               // south goal area
+  // Corner arcs
+  g.beginPath(); g.arc(6372,1062,16,0,Math.PI/2); g.stroke();
+  g.beginPath(); g.arc(6826,1062,16,Math.PI/2,Math.PI); g.stroke();
+  g.beginPath(); g.arc(6372,2060,16,-Math.PI/2,0); g.stroke();
+  g.beginPath(); g.arc(6826,2060,16,Math.PI,Math.PI*1.5); g.stroke();
+  // Center spot
+  g.fillStyle="rgba(255,255,255,.7)"; g.beginPath(); g.arc(6599,1561,5,0,7); g.fill();
+  // === Baseball (x=6860..7360) ===
+  // Warning track (light red-brown around outfield perimeter)
+  tex(6880,1062,7340,1190, 52, "#8a5030","#6a3a20", 7,5);
+  tex(7252,1190,7340,1680, 32, "#8a5030","#6a3a20", 7,5);
+  tex(6880,1640,7340,1700, 28, "#8a5030","#6a3a20", 7,5);
+  // Infield clay (diamond from home to 2nd base)
+  g.fillStyle="#9a5a38";
+  g.beginPath();
+  g.moveTo(7060,1566); g.lineTo(7168,1452); g.lineTo(7060,1338); g.lineTo(6952,1452);
+  g.closePath(); g.fill();
+  tex(6952,1338,7168,1566, 60, "#8a5030","#a06040", 5,4);
+  // Pitcher's mound
+  g.fillStyle="#b07050"; g.beginPath(); g.arc(7060,1452,18,0,7); g.fill();
+  // Chalk lines
+  g.strokeStyle="rgba(255,255,255,.85)"; g.lineWidth=4; g.setLineDash([]);
+  g.beginPath(); g.moveTo(7060,1566); g.lineTo(7168,1452); g.stroke(); // 1B baseline
+  g.beginPath(); g.moveTo(7060,1566); g.lineTo(6952,1452); g.stroke(); // 3B baseline
+  g.strokeStyle="rgba(255,255,255,.45)"; g.lineWidth=2; g.setLineDash([18,12]);
+  g.beginPath(); g.moveTo(7060,1566); g.lineTo(7218,1696); g.stroke(); // 1B foul line
+  g.beginPath(); g.moveTo(7060,1566); g.lineTo(6902,1696); g.stroke(); // 3B foul line
+  g.setLineDash([]);
+  // Home plate
+  g.fillStyle="#ffe9c2";
+  g.beginPath(); g.moveTo(7060,1566); g.lineTo(7074,1556); g.lineTo(7074,1543); g.lineTo(7046,1543); g.lineTo(7046,1556); g.closePath(); g.fill();
+  // Bases
+  g.fillRect(7162,1444,13,14); // 1st
+  g.fillRect(7053,1331,13,13); // 2nd
+  g.fillRect(6945,1444,13,14); // 3rd
+  // Batter's boxes
+  g.strokeStyle="rgba(255,255,255,.55)"; g.lineWidth=2; g.setLineDash([5,4]);
+  g.strokeRect(7025,1551,22,34);
+  g.strokeRect(7063,1551,22,34);
+  g.setLineDash([]);
+  // Bleacher concrete pad (east)
+  g.fillStyle="#9a9090"; g.fillRect(7278,1062,62,458);
+  tex(7278,1062,7340,1520, 26, "#888888","#a0a0a8", 8,6);
+  // Water fountain pad
+  g.fillStyle="#7a8a90"; g.fillRect(6862,1952,42,42);
+  // Sprinkler head markers
+  for(const [sx,sy] of [[6450,1200],[6622,1900],[7022,1102],[7152,1852]]){
+    g.fillStyle="#668066"; g.beginPath(); g.arc(sx,sy,7,0,7); g.fill();
+    g.fillStyle="#4a604a"; g.beginPath(); g.arc(sx,sy,4,0,7); g.fill();
+  }
+  g.lineWidth=1;
 
   /* ── 7. Shopping district (5632..7872, 2560..4480) ──────────────── */
   g.fillStyle="#3f3a60"; g.fillRect(5632,2560,2240,1920);

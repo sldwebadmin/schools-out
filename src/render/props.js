@@ -380,4 +380,83 @@ export function drawWall(w, frame){
     rectW("#ffc44d", w.x, w.y, horiz ? w.w : 5, horiz ? 5 : w.h); // yellow warning edge
     outline(w.x, w.y, w.w, w.h);
   }
+  else if(T === "bleacher"){
+    // Stepped sports seating — rows of benches viewed top-down
+    rectW("rgba(0,0,0,.24)", w.x+4, w.y+6, w.w, w.h);
+    rectW("#606070", w.x, w.y, w.w, w.h); // structural base
+    const rows = Math.max(2, Math.floor(w.h / 20));
+    for(let r=0; r<rows; r++){
+      const ry = w.y + Math.floor(r * w.h / rows);
+      const rh = Math.floor(w.h / rows) - 3;
+      const shade = r / rows;
+      const cc = Math.floor(110 + shade * 50);
+      rectW(`rgb(${cc},${cc},${cc+18})`, w.x+6, ry, w.w-12, rh);
+    }
+    rectW("#404050", w.x, w.y, 8, w.h); // left support
+    rectW("#404050", w.x+w.w-8, w.y, 8, w.h); // right support
+    outline(w.x, w.y, w.w, w.h);
+  }
+  else if(T === "backstop"){
+    // Baseball backstop — chain-link fence behind home plate
+    rectW("rgba(0,0,0,.2)", w.x+3, w.y+5, w.w, w.h);
+    rectW("#707880", w.x, w.y, w.w, 8);        // top rail
+    rectW("#707880", w.x, w.y, 6, w.h);        // left post
+    rectW("#707880", w.x+w.w-6, w.y, 6, w.h);  // right post
+    rectW("#707880", w.x, w.y+w.h-6, w.w, 6);  // bottom rail
+    ctx.strokeStyle = "#8a9098"; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    for(let fy=w.y+8; fy<w.y+w.h-6; fy+=8){
+      ctx.beginPath();
+      ctx.moveTo(snap(w.x+6-cam.x),      snap(fy-cam.y));
+      ctx.lineTo(snap(w.x+w.w-6-cam.x),  snap(fy+4-cam.y));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(snap(w.x+6-cam.x),      snap(fy+4-cam.y));
+      ctx.lineTo(snap(w.x+w.w-6-cam.x),  snap(fy-cam.y));
+      ctx.stroke();
+    }
+    outline(w.x, w.y, w.w, w.h);
+  }
+  else if(T === "goal"){
+    // Soccer goal — two posts + crossbar + net
+    const horiz = w.w >= w.h;
+    rectW("rgba(0,0,0,.16)", w.x+3, w.y+3, w.w, w.h);
+    if(horiz){
+      // Horizontal goal (north/south facing)
+      rectW("#e0e0e0", w.x, w.y, 8, w.h);           // left post
+      rectW("#e0e0e0", w.x+w.w-8, w.y, 8, w.h);     // right post
+      rectW("#e0e0e0", w.x, w.y, w.w, 8);            // crossbar
+      ctx.strokeStyle="rgba(200,200,200,.55)"; ctx.lineWidth=1; ctx.setLineDash([]);
+      for(let nx=w.x+8; nx<w.x+w.w-8; nx+=13){
+        ctx.beginPath(); ctx.moveTo(snap(nx-cam.x),snap(w.y+8-cam.y)); ctx.lineTo(snap(nx-cam.x),snap(w.y+w.h-cam.y)); ctx.stroke();
+      }
+      for(let ny=w.y+8; ny<w.y+w.h; ny+=11){
+        ctx.beginPath(); ctx.moveTo(snap(w.x+8-cam.x),snap(ny-cam.y)); ctx.lineTo(snap(w.x+w.w-8-cam.x),snap(ny-cam.y)); ctx.stroke();
+      }
+    } else {
+      rectW("#e0e0e0", w.x, w.y, w.w+8, 8);
+      rectW("#e0e0e0", w.x, w.y, 8, w.h);
+      rectW("#e0e0e0", w.x, w.y+w.h-8, w.w+8, 8);
+      ctx.strokeStyle="rgba(200,200,200,.55)"; ctx.lineWidth=1; ctx.setLineDash([]);
+      for(let nx=w.x+8; nx<w.x+w.w+8; nx+=13){
+        ctx.beginPath(); ctx.moveTo(snap(nx-cam.x),snap(w.y+8-cam.y)); ctx.lineTo(snap(nx-cam.x),snap(w.y+w.h-8-cam.y)); ctx.stroke();
+      }
+      for(let ny=w.y+8; ny<w.y+w.h-8; ny+=11){
+        ctx.beginPath(); ctx.moveTo(snap(w.x+8-cam.x),snap(ny-cam.y)); ctx.lineTo(snap(w.x+w.w+8-cam.x),snap(ny-cam.y)); ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+    outline(w.x, w.y, w.w, w.h);
+  }
+  else if(T === "fountain"){
+    // Water fountain — small pedestal + basin + water
+    rectW("rgba(0,0,0,.2)", w.x+3, w.y+4, w.w, w.h);
+    rectW("#6a8a9a", w.x, w.y, w.w, w.h);              // outer casing
+    rectW("#7aaac0", w.x+3, w.y+3, w.w-6, w.h-6);      // basin
+    rectW("#2ec4b6", w.x+Math.floor(w.w*.28), w.y+Math.floor(w.h*.28), Math.floor(w.w*.44), Math.floor(w.h*.44)); // water surface
+    // Ripple
+    ctx.strokeStyle="rgba(255,255,255,.5)"; ctx.lineWidth=1; ctx.setLineDash([]);
+    const fc = w.x + w.w/2, fy = w.y + w.h/2;
+    ctx.beginPath(); ctx.arc(snap(fc-cam.x), snap(fy-cam.y), Math.floor(w.w*.18), 0, 7); ctx.stroke();
+    outline(w.x, w.y, w.w, w.h);
+  }
 }

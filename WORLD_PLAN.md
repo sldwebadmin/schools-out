@@ -12,7 +12,7 @@ Canvas: 8192×8192 px, 32px tiles (256×256). Bounds below are targets — snap 
 | Great Waterfront Lake | 2560, 6400, 5376, 1536 | Summer centerpiece. Beach, dock, boardwalk, snack shack, ice-cream truck spot. Southern world border. | built |
 | Treehouse village | inside Woods, x≈900..1400, y≈3060..3500 | THE social hub: 3 treehouses + rope bridges, Club HQ interior, mission board, hidden south trail. | built |
 | Construction site | 512, 512, 1536, 1280 | Adventure. Dirt ramps (e-bike tie-in), keep-out dares, diegetic map-expansion story. | built |
-| Athletic fields | east of school, ~6336, 1024, 1024, 1088 | Pickup games, sprinkler dodging. | reserved |
+| Athletic fields | east of school, ~6336, 1024, 1024, 1088 | Pickup games, sprinkler dodging. | built |
 | Water tower overlook | 6656, 512, 1024, 1024 | Climbing challenge, dusk vista, secret graffiti, fireflies. | reserved |
 | Storm drains | under main roads (interior maps) | Secret shortcuts (Goonies vibe); chase escapes. Uses door system. | reserved |
 | Meadow reserve | 256, 5888, 2048, 2048 | Future regions. Wild meadow + bike path sketches. | reserved |

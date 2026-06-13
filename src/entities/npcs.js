@@ -33,6 +33,11 @@ export function makeNPCs(){
     // Construction site — hard-hat worker patrols south interior
     { kind:"walk", variant:0, wps:[[620,1700],[1900,1700]], pp:true, spd:1.1, shirt:"#ff8f57", hair:"#2b2118",
       lines:["Hey! No kids in here!","This is a hard hat zone!","It's not safe — please leave!","I'm calling your parents!","Get off the site, now!","Seriously, dangerous work happening!"] },
+    // Athletic fields — two kids playing catch (outfield, ball arcs between them)
+    { kind:"kid", variant:0, wps:[[6910,1182]], spd:0, shirt:"#57b8ff", hair:"#2b2118",
+      lines:["I got it!","Throw it back!","Watch out for the sprinklers!","Go Bulldogs!"] },
+    { kind:"kid", variant:2, wps:[[7110,1182]], spd:0, shirt:"#9ad17f", hair:"#4a3322",
+      lines:["Your turn!","Home run!","Nice arm!","Three up, three down!"] },
   ];
   for(const n of npcs){
     n.x=n.wps[0][0]; n.y=n.wps[0][1];
