@@ -23,12 +23,12 @@ export function bakeMini(){
   B(512,   512, 1536, 1280, "#5a4a30"); // Construction site
   B(6336, 1024, 1024, 1088, "#3a5a3a"); // Athletic fields
   B(6656,  512, 1024, 1024, "#4a4a6a"); // Water tower overlook
-  B(2560, 6400, 5376, 1536, "#1f4a63"); // Great Waterfront Lake
+  B(2560, 6400, 5376, 1536, "#2e7a9e"); // Great Waterfront Lake (built)
   B(256,  5888, 2048, 2048, "#2c5232"); // Meadow reserve (same as base)
   // Pond
   B(3082, 2638,  236,  224, "#2e6f8e");
   // Roads
-  B(RX,    512,  140, 5376, "#2a2345"); // main N-S road
+  B(RX,    512,  140, 5888, "#2a2345"); // main N-S road (extends to lake)
   B(2560, HY1,  2560,  140, "#2a2345"); // HY1
   B(2560, HY2,  2560,  140, "#2a2345"); // HY2
   B(4588, HY1,  1044,  140, "#2a2345"); // shopping connector (HY1 east)

@@ -1,4 +1,4 @@
-// Interior map definitions for player's house and Maple Mart.
+// Interior map definitions for player's house, Maple Mart, and Snack Shack.
 // Coordinate system is local to each interior (origin 0,0).
 // Walls, exits, and interactables are in interior-local pixels.
 
@@ -51,6 +51,21 @@ const MART_WALLS = [
   W(20,380,260,40,'table',{hop:true}), W(360,380,260,40,'table',{hop:true}),
 ];
 
+// ── SNACK SHACK (320×240) ────────────────────────────────────────────
+// Layout: service counter north, open floor, exit south
+// Exit: gap in south wall at x=128..192
+
+const SHACK_WALLS = [
+  W(0,0,320,20),
+  W(0,0,20,240),
+  W(300,0,20,240),
+  W(0,220,128,20), W(192,220,128,20),   // south wall with exit gap 128..192
+  // Service counter
+  W(20,50,200,40,'market'),
+  // Popsicle cooler (right side of counter)
+  W(240,55,50,35,'house',{hop:true,hue:'#3a7a8a',trim:'#ffe9c2'}),
+];
+
 export const INTERIORS = {
   house: {
     name: "Your House",
@@ -85,6 +100,24 @@ export const INTERIORS = {
       { kind:"kid", variant:2, wps:[[320,418]], spd:0,
         shirt:"#ff8f57", hair:"#2b2118",
         lines:["Fresh stock daily!","Try the freezer section!","Have a great summer!"] },
+    ],
+  },
+  snackshack: {
+    name: "Snack Shack",
+    w: 320, h: 240,
+    bg: "#b8966e",
+    walls: SHACK_WALLS,
+    exits: [
+      { x:128, y:210, w:64, h:30, worldTarget:{x:6650, y:6472} },
+    ],
+    interactables: [
+      { x:265, y:72, r:42, txt:"Popsicle Cooler", txt2:"Free daily beach popsicle — take one!", pickup:"pop", _key:`shack_pop_${DAY_SEED}` },
+      { x:110, y:70, r:40, txt:"Menu Board",      txt2:"Corn dog · Nachos · Lemonade" },
+    ],
+    npcs: [
+      { kind:"kid", variant:0, wps:[[160,120]], spd:0,
+        shirt:"#ffc44d", hair:"#2b2118",
+        lines:["Fresh popsicles daily!","Watch out for seagulls.","Stay safe near the water!"] },
     ],
   },
 };

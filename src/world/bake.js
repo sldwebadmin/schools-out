@@ -131,13 +131,18 @@ export function bakeGroundInto(g, wx0, wy0) {
   g.strokeRect(4790,3704,80,70);
   g.beginPath(); g.arc(4830,3774,40,0,Math.PI); g.stroke();
 
-  /* ── 9. Great Waterfront Lake (2560..7936, 6400..7936) — reserved ── */
-  // Sand strip at north shore
-  g.fillStyle="#d9c08c"; g.fillRect(2560,6400,5376,80);
-  tex(2560,6400,7936,6480, 120, "#cdb27c","#e3cd9d", 6,4);
-  // Water
-  g.fillStyle="#1f4a63"; g.fillRect(2560,6480,5376,1456);
-  tex(2560,6480,7936,7936, 300, "#24567a","#183c5a", 12,6);
+  /* ── 9. Great Waterfront Lake (2560..7936, 6400..7936) — built ── */
+  // Sand strip (y=6400..6450)
+  g.fillStyle="#d9c08c"; g.fillRect(2560,6400,5376,50);
+  tex(2560,6400,7936,6450, 80, "#cdb27c","#e3cd9d", 6,4);
+  // Boardwalk planks (y=6450..6490)
+  g.fillStyle="#a86f3e"; g.fillRect(2560,6450,5376,40);
+  g.fillStyle="#8a5730";
+  for(let bx=2560;bx<7936;bx+=4) g.fillRect(bx,6450,3,40);
+  g.fillStyle="#7a4e28"; g.fillRect(2560,6450,5376,4); g.fillRect(2560,6486,5376,4);
+  // Water (y=6490..7936)
+  g.fillStyle="#1f4a63"; g.fillRect(2560,6490,5376,1446);
+  tex(2560,6490,7936,7936, 300, "#24567a","#183c5a", 12,6);
 
   /* ── 10. Dirt bike paths ─────────────────────────────────────────── */
   // Woods east edge → park west edge
@@ -146,13 +151,13 @@ export function bakeGroundInto(g, wx0, wy0) {
   dirt(4490,2112,60,192);
 
   /* ── 11. Sidewalks ───────────────────────────────────────────────── */
-  sidewalk(4420,3584,28,2304);  // main road left side through neighbourhood
-  sidewalk(4588,3584,28,2304);  // main road right side
+  sidewalk(4420,3584,28,2816);  // main road left side through neighbourhood + lake approach
+  sidewalk(4588,3584,28,2816);  // main road right side
   sidewalk(2560,HY1-28,2560,28); sidewalk(2560,HY1+140,2560,28); // HY1 flanks
   sidewalk(2560,HY2-28,2560,28); sidewalk(2560,HY2+140,2560,28); // HY2 flanks
 
   /* ── 12. Roads ───────────────────────────────────────────────────── */
-  road(RX,512,140,5376);               // main N-S road y=512..5888
+  road(RX,512,140,5888);               // main N-S road y=512..6400
   road(2560,HY1,2560,140);             // neighbourhood horizontal 1
   road(2560,HY2,2560,140);             // neighbourhood horizontal 2
 
@@ -164,7 +169,7 @@ export function bakeGroundInto(g, wx0, wy0) {
 
   /* ── 14. Road markings ───────────────────────────────────────────── */
   g.fillStyle="#8d80b8";
-  for(let y=532;y<5850;y+=64) g.fillRect(RX+66,y,8,28);            // main road dashes
+  for(let y=532;y<6380;y+=64) g.fillRect(RX+66,y,8,28);            // main road dashes
   for(let x=2584;x<5104;x+=64) g.fillRect(x,HY1+66,28,8);          // HY1 dashes
   for(let x=2584;x<5104;x+=64) g.fillRect(x,HY2+66,28,8);          // HY2 dashes
   for(let x=4612;x<5616;x+=64) g.fillRect(x,HY1+66,28,8);          // connector dashes

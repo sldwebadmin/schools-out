@@ -163,11 +163,35 @@ export function buildMap(){
      RESERVED REGIONS — teaser signs + physical borders
   ══════════════════════════════════════════════════════ */
 
-  // Great Waterfront Lake — south of neighbourhood
-  addWall(2600,6450,12,14,"sign",{ghost:true,txt:"BEACH OPENS SOON",txt2:"— the Maple Court Council"});
-  addWall(5800,6500,12,14,"sign",{ghost:true,txt:"NO SWIMMING YET",txt2:"boardwalk under construction"});
-  // Hedge/barrier at lake shore north edge
-  addWall(2560,6390,5376,26,"hedge");
+  /* ══════════════════════════════════════════════════════
+     GREAT WATERFRONT LAKE  x=2560..7936, y=6400..7936
+     Sand y=6400..6450, boardwalk y=6450..6490, water y=6490+
+  ══════════════════════════════════════════════════════ */
+  // Snack shack (east boardwalk, south face at y=6450)
+  addWall(6520,6310,260,140,"shack");
+  // Water barrier — gap at dock (x=4396..4564)
+  addWall(2560,6490,1836,26,"water");
+  addWall(4564,6490,3372,26,"water");
+  // Dock (walkable, visual only)
+  addWall(4396,6490,168,280,"dock",{ghost:true});
+  // Paddle boats on dock
+  addWall(4410,6560,48,36,"paddleboat",{ghost:true,hue:"#57b8ff"});
+  addWall(4492,6630,48,36,"paddleboat",{ghost:true,hue:"#ff8f57"});
+  // Beach umbrellas on sand
+  addWall(3000,6422,60,4,"umbrella",{ghost:true,hue:"#ff6b57"});
+  addWall(3600,6422,60,4,"umbrella",{ghost:true,hue:"#ffc44d"});
+  addWall(4800,6422,60,4,"umbrella",{ghost:true,hue:"#2ec4b6"});
+  addWall(5300,6422,60,4,"umbrella",{ghost:true,hue:"#ff9ac1"});
+  addWall(5900,6422,60,4,"umbrella",{ghost:true,hue:"#9ad17f"});
+  // Ice cream truck (north side of sand, near main road)
+  addWall(3060,6330,120,80,"truck",{ghost:true});
+  // Signs
+  addWall(2650,6410,12,14,"sign",{ghost:true,txt:"GREAT WATERFRONT LAKE",txt2:"no swimming beyond the dock"});
+  addWall(4396,6462,12,14,"sign",{ghost:true,txt:"DOCK",txt2:"watch your step"});
+  // Boardwalk lamps
+  lamps.push({x:3100,y:6465}); lamps.push({x:5000,y:6465}); lamps.push({x:6560,y:6465});
+  // Trees at east and west lake edges
+  addTree(2600,6390,52); addTree(7840,6390,52);
 
   // Construction site (NW, x=512..2048, y=512..1792)
   addWall(512,512,1536,26,"hedge");   // north
@@ -216,4 +240,7 @@ export function buildMap(){
 
   // SE south house — yard(4640,5260,520,420): south=5590
   door(4843,5578,50,22,null,0,0,{x:4868,y:5600},"Gone fishing.");
+
+  // Snack shack — south face y=6450; door bottom y=6460
+  door(6618,6438,64,22,"snackshack",160,185,{x:6650,y:6472});
 }

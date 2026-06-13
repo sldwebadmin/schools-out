@@ -172,4 +172,66 @@ export function drawWall(w, frame){
     rectW("#ffe9c2", w.x, w.y-7, w.w, 4);
     rectW("#e06a3a", w.x-3, w.y+w.h-3, w.w+6, 4);
   }
+  else if(T === "shack"){
+    const FW = 42;
+    rectW("#c8a870", w.x, w.y + w.h - FW, w.w, FW);
+    rectW("#a88050", w.x-8, w.y-10, w.w+16, w.h - FW + 10);
+    // Awning stripes
+    const sw = (w.w + 16) / 8;
+    for(let i = 0; i < 8; i++){
+      ctx.fillStyle = i % 2 ? "#ff6b57" : "#ffe9c2";
+      ctx.fillRect(snap(w.x - 8 + i * sw - cam.x), snap(w.y - 10 - cam.y), Math.ceil(sw), 12);
+    }
+    rectW("#3a2719", w.x + w.w * .38, w.y + w.h - 36, 28, 36);
+    ctx.fillStyle = "#ffc44d"; ctx.font = "700 11px monospace"; ctx.textBaseline = "alphabetic";
+    ctx.fillText("SNACK SHACK", snap(w.x + w.w / 2 - 38 - cam.x), snap(w.y - 2 - cam.y));
+    outline(w.x - 8, w.y - 10, w.w + 16, w.h + 10);
+  }
+  else if(T === "truck"){
+    rectW("#ffe9c2", w.x, w.y - 20, w.w, w.h + 20);
+    rectW("#ff9ac1", w.x, w.y - 20, w.w, 18);
+    rectW("#ffc44d", w.x, w.y - 20, 7, w.h + 20);
+    rectW("#2ec4b6", w.x + 10, w.y - 14, 30, 22);
+    rectW("#1b1430", w.x + 8,         w.y + w.h - 4, 22, 14);
+    rectW("#1b1430", w.x + w.w - 30,  w.y + w.h - 4, 22, 14);
+    ctx.fillStyle = "#ff6b57"; ctx.font = "700 9px monospace"; ctx.textBaseline = "alphabetic";
+    ctx.fillText("ICE CREAM", snap(w.x + 42 - cam.x), snap(w.y - 5 - cam.y));
+    outline(w.x, w.y - 20, w.w, w.h + 20);
+  }
+  else if(T === "umbrella"){
+    const hw = w.w;
+    rectW("#8a5730", w.x + hw / 2 - 2, w.y - 28, 4, 32);
+    ctx.fillStyle = w.hue || "#ff6b57";
+    ctx.beginPath();
+    ctx.moveTo(snap(w.x + hw / 2 - cam.x), snap(w.y - 28 - cam.y));
+    ctx.lineTo(snap(w.x - cam.x),          snap(w.y - cam.y));
+    ctx.lineTo(snap(w.x + hw - cam.x),     snap(w.y - cam.y));
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.28)";
+    for(let i = 0; i < 3; i++){
+      const sx = w.x + i * (hw / 3);
+      ctx.beginPath();
+      ctx.moveTo(snap(w.x + hw / 2 - cam.x), snap(w.y - 28 - cam.y));
+      ctx.lineTo(snap(sx - cam.x),            snap(w.y - cam.y));
+      ctx.lineTo(snap(sx + hw / 6 - cam.x),   snap(w.y - cam.y));
+      ctx.fill();
+    }
+  }
+  else if(T === "paddleboat"){
+    rectW(w.hue || "#ff8f57", w.x, w.y - 10, w.w, w.h + 10);
+    rectW("#ffe9c2", w.x + 4, w.y - 8, w.w - 8, 8);
+    rectW("#1b1430", w.x + w.w / 2 - 4, w.y - 22, 8, 14);
+    rectW("#a86f3e", w.x + w.w - 14, w.y, 14, w.h);
+  }
+  else if(T === "dock"){
+    rectW("#a86f3e", w.x, w.y, w.w, w.h);
+    ctx.fillStyle = "#8a5730";
+    for(let dy = 0; dy < w.h; dy += 12) ctx.fillRect(snap(w.x - cam.x), snap(w.y + dy - cam.y), w.w, 3);
+    rectW("#6b4020", w.x, w.y, 6, w.h);
+    rectW("#6b4020", w.x + w.w - 6, w.y, 6, w.h);
+    rectW("#6b4020", w.x, w.y + w.h - 8, w.w, 8);
+    rectW("#4a2e12", w.x + 4,        w.y + w.h - 30, 8, 46);
+    rectW("#4a2e12", w.x + w.w - 12, w.y + w.h - 30, 8, 46);
+  }
+  else if(T === "water"){ /* collision barrier only — no render */ }
 }

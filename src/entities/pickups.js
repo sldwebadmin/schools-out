@@ -13,6 +13,8 @@ export const POP_SPOTS = [
   [6300,2800],[6900,3700],
   // Wild meadow connector
   [4518,2000],
+  // Great Waterfront Lake (beach/boardwalk)
+  [3400,6430],[5100,6465],[6200,6460],[4600,6455],
 ];
 
 export const BIKE_SPOTS = [

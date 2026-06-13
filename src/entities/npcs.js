@@ -20,6 +20,11 @@ export function makeNPCs(){
       lines:["First to 11 wins.","Hoops, then popsicles?"] },
     { kind:"kid", variant:2, wps:[[6700,2750]], spd:0, shirt:"#7fd8cf", hair:"#4a3322",
       lines:["Mom's grabbing popsicles!","Maple Mart has the good freezer."] },
+    // Beach kids (Great Waterfront Lake)
+    { kind:"kid", variant:0, wps:[[3800,6435]], spd:0, shirt:"#57b8ff", hair:"#2b2118",
+      lines:["The water's freezing!","Best popsicle spot ever.","Biscuit won't swim either!"] },
+    { kind:"kid", variant:1, wps:[[5300,6435]], spd:0, shirt:"#ff9ac1", hair:"#4a3322",
+      lines:["Ice cream truck's here!","Race you to the dock!","Sandcastles later?"] },
   ];
   for(const n of npcs){
     n.x=n.wps[0][0]; n.y=n.wps[0][1];

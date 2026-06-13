@@ -253,7 +253,10 @@ export function update(){
   for(const q of parts){ q.x += q.vx; q.y += q.vy; q.l--; }
   parts = parts.filter(q => q.l > 0);
   for(const f of flies){ f.p += .03; f.x += Math.sin(f.p)*.4; }
-  if(frame % 3200 === 1600) iceCreamTruck();
+  if(frame % 3200 === 1600){
+    const tDist = Math.hypot(player.x - 3120, player.y - 6405);
+    iceCreamTruck(tDist < 600 ? 0.028 : tDist < 1200 ? 0.018 : 0.012);
+  }
 
   /* door detection (overworld) */
   if(doorCooldown > 0){ doorCooldown--; if(doorCooldown === 0) interactText = null; }
@@ -339,6 +342,15 @@ export function draw(){
 
   drawChunks(ctx, cam.x, cam.y);
   evictChunks(cam.x, cam.y);
+
+  /* lake foam shimmer (water edge y≈6490, x=2560..7936) */
+  if(inView(2560, 6465, 5376, 40)){
+    for(let i=0;i<9;i++){
+      const sx = 2700 + Math.sin(frame*.018 + i*2.1)*2200;
+      ctx.fillStyle = "rgba(255,255,255," + (.06 + .05*Math.sin(frame*.04+i)) + ")";
+      ctx.fillRect(snap(sx-cam.x), snap(6488-cam.y), 32, PX);
+    }
+  }
 
   /* pond shimmer (park pond: centre 3200,2750) */
   if(inView(2964, 2620, 472, 260)){

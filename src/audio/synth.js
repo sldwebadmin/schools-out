@@ -54,10 +54,10 @@ function cicadas(){
   src.start(); lfo.start();
 }
 
-export function iceCreamTruck(){
+export function iceCreamTruck(vol=.012){
   if(!AC || !master) return;
   const m = [659.25, 659.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25];
-  m.forEach((f, i) => note(f, AC.currentTime + .24*i, .22, "square", .012));
+  m.forEach((f, i) => note(f, AC.currentTime + .24*i, .22, "square", vol));
 }
 
 export function startMusic(){
