@@ -19,8 +19,9 @@ export function bakeMini(){
   B(2560, 2304, 2048, 1152, "#3a6040"); // Maple Park
   B(5632, 2560, 2240, 1920, "#4a3a6a"); // Maple Mart District
   B(2560, 3584, 2560, 2560, "#3f5d44"); // Maple Court (neighbourhood)
+  // Built non-hub regions
+  B(512,   512, 1536, 1280, "#8a6a3e"); // Construction site (built)
   // Reserved regions (darker/muted so they read as "not yet open")
-  B(512,   512, 1536, 1280, "#5a4a30"); // Construction site
   B(6336, 1024, 1024, 1088, "#3a5a3a"); // Athletic fields
   B(6656,  512, 1024, 1024, "#4a4a6a"); // Water tower overlook
   B(2560, 6400, 5376, 1536, "#2e7a9e"); // Great Waterfront Lake (built)

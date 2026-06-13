@@ -282,4 +282,102 @@ export function drawWall(w, frame){
     ctx.fillStyle = "#8a6535";
     for(let ry=w.y-24; ry<w.y+4; ry+=9) ctx.fillRect(snap(w.x+4-cam.x), snap(ry-cam.y), w.w-8, 3);
   }
+  else if(T === "frame"){
+    // Construction house frame — individual beam (horiz or vert)
+    const sh = Math.min(w.w, w.h); // short dimension = post size
+    rectW("rgba(0,0,0,.22)", w.x+3, w.y+4, w.w, w.h);
+    rectW("#c8a262", w.x, w.y, w.w, w.h);
+    rectW("#d4b070", w.x, w.y, w.w, Math.ceil(w.h/2)); // lighter top half
+    rectW("#8a6535", w.x, w.y, sh, sh);                // start post
+    rectW("#8a6535", w.x+w.w-sh, w.y+w.h-sh, sh, sh); // end post
+    if(w.h > w.w * 1.4){ // tall vertical beam — add diagonal brace
+      ctx.strokeStyle = "#a87c40"; ctx.lineWidth = 3; ctx.setLineDash([10,7]);
+      ctx.beginPath();
+      ctx.moveTo(snap(w.x-cam.x),      snap(w.y+sh-cam.y));
+      ctx.lineTo(snap(w.x+w.w-cam.x),  snap(w.y+w.h-sh-cam.y));
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    outline(w.x, w.y, w.w, w.h);
+  }
+  else if(T === "scaffold"){
+    // Raised metal platform — hop:true, guards popsicle
+    rectW("rgba(0,0,0,.28)", w.x+5, w.y+7, w.w, w.h);
+    rectW("#7a8090", w.x, w.y, w.w, w.h);
+    ctx.fillStyle = "#666e80";
+    for(let gx=w.x+8; gx<w.x+w.w; gx+=18) ctx.fillRect(snap(gx-cam.x), snap(w.y-cam.y), 2, w.h);
+    for(let gy=w.y+8; gy<w.y+w.h; gy+=18) ctx.fillRect(snap(w.x-cam.x), snap(gy-cam.y), w.w, 2);
+    rectW("#ffc44d", w.x, w.y+Math.floor(w.h/2)-3, w.w, 5); // yellow safety stripe
+    rectW("#9aa0b0", w.x-3, w.y-4, w.w+6, 5);               // handrail top
+    rectW("#9aa0b0", w.x-3, w.y+w.h, w.w+6, 5);             // handrail bottom
+    rectW("#5a6070", w.x, w.y+w.h, 8, 10);                   // support leg L
+    rectW("#5a6070", w.x+w.w-8, w.y+w.h, 8, 10);             // support leg R
+    outline(w.x, w.y, w.w, w.h);
+  }
+  else if(T === "dozer"){
+    // Sleeping bulldozer (top-down) — yellow cab, dark tracks, ZZZ
+    const bx = Math.floor(w.w*.2), bw = Math.floor(w.w*.6);
+    const tw = Math.floor(w.w*.19);
+    rectW("rgba(0,0,0,.22)", w.x+5, w.y+6, w.w, w.h);
+    rectW("#a08000", w.x, w.y, tw, w.h);                 // left track
+    rectW("#a08000", w.x+w.w-tw, w.y, tw, w.h);          // right track
+    ctx.fillStyle = "#7a6000";
+    for(let ty=w.y+4; ty<w.y+w.h-4; ty+=14){
+      ctx.fillRect(snap(w.x-cam.x), snap(ty-cam.y), tw, 6);
+      ctx.fillRect(snap(w.x+w.w-tw-cam.x), snap(ty-cam.y), tw, 6);
+    }
+    rectW("#e0b800", w.x+bx, w.y, bw, Math.floor(w.h*.8));      // body
+    rectW("#c8a000", w.x+bx, w.y+Math.floor(w.h*.25), bw, Math.floor(w.h*.55)); // cab shadow
+    rectW("#2ec4b6", w.x+bx+Math.floor(bw*.15), w.y+Math.floor(w.h*.1), Math.floor(bw*.7), Math.floor(w.h*.4)); // windshield
+    rectW("#a08000", w.x+Math.floor(bx*.5), w.y+Math.floor(w.h*.75), Math.floor(w.w*.55), Math.floor(w.h*.22)); // blade
+    // exhaust pipe
+    rectW("#4a4a4a", w.x+bx+Math.floor(bw*.72), w.y-10, 7, 14);
+    rectW("#333333", w.x+bx+Math.floor(bw*.72), w.y-10, 7, 5);
+    // ZZZ sleeping text
+    ctx.fillStyle = "#ffe9c2"; ctx.font = "bold 11px monospace"; ctx.textAlign = "left";
+    ctx.fillText("z z z", snap(w.x+bx+Math.floor(bw*.25)-cam.x), snap(w.y-14-cam.y));
+    outline(w.x+bx, w.y, bw, Math.floor(w.h*.8));
+  }
+  else if(T === "mound"){
+    // Dirt mound — rounded pile of excavated earth
+    rectW("rgba(0,0,0,.18)", w.x+4, w.y+5, w.w, w.h);
+    rectW("#8a6535", w.x, w.y+Math.floor(w.h*.3), w.w, Math.floor(w.h*.7));
+    rectW("#a07840", w.x+Math.floor(w.w*.08), w.y, Math.floor(w.w*.84), Math.floor(w.h*.75));
+    rectW("#b88a50", w.x+Math.floor(w.w*.22), w.y+4, Math.floor(w.w*.5), Math.floor(w.h*.38)); // highlight crest
+    ctx.fillStyle = "#6b4a28";
+    for(let i=0;i<4;i++) ctx.fillRect(snap(w.x+6+i*Math.floor(w.w/5)-cam.x), snap(w.y+Math.floor(w.h*.52)+i*3-cam.y), Math.floor(w.w/7), 3);
+  }
+  else if(T === "pipe"){
+    // Pipe stack — circular cross-sections viewed from above
+    rectW("rgba(0,0,0,.2)", w.x+4, w.y+5, w.w, w.h);
+    rectW("#606878", w.x, w.y, w.w, w.h); // tray background
+    const pR = Math.min(Math.floor(w.h/2)-3, 22);
+    const pCols = Math.max(1, Math.floor(w.w/(pR*2+6)));
+    const pRows = Math.max(1, Math.floor(w.h/(pR*2+6)));
+    for(let pr=0;pr<pRows;pr++) for(let pc=0;pc<pCols;pc++){
+      const px = w.x + 4 + pc*(pR*2+6) + pR;
+      const py = w.y + 4 + pr*(pR*2+6) + pR;
+      ctx.fillStyle="#9a9aaa"; ctx.beginPath(); ctx.arc(snap(px-cam.x),snap(py-cam.y),pR,0,7); ctx.fill();
+      ctx.fillStyle="#5a5a70"; ctx.beginPath(); ctx.arc(snap(px-cam.x),snap(py-cam.y),pR-4,0,7); ctx.fill();
+      ctx.fillStyle="rgba(210,230,255,.35)"; ctx.beginPath(); ctx.arc(snap(px-3-cam.x),snap(py-3-cam.y),pR-8,0,7); ctx.fill();
+    }
+    outline(w.x, w.y, w.w, w.h);
+  }
+  else if(T === "ramp"){
+    // Plywood ramp — angled surface for stunt jumps (hop:true for later race use)
+    rectW("rgba(0,0,0,.2)", w.x+4, w.y+5, w.w, w.h);
+    const horiz = w.w >= w.h;
+    rectW("#a87c40", w.x, w.y, w.w, w.h);
+    ctx.fillStyle = "#8a6535";
+    if(horiz){
+      for(let rx=w.x; rx<w.x+w.w; rx+=20) ctx.fillRect(snap(rx-cam.x), snap(w.y-cam.y), 16, w.h);
+      rectW("#6b4020", w.x+w.w-10, w.y, 10, w.h); // raised edge
+      rectW("#c8a262", w.x, w.y, 8, w.h);          // low edge
+    } else {
+      for(let ry=w.y; ry<w.y+w.h; ry+=20) ctx.fillRect(snap(w.x-cam.x), snap(ry-cam.y), w.w, 16);
+      rectW("#6b4020", w.x, w.y+w.h-10, w.w, 10);
+      rectW("#c8a262", w.x, w.y, w.w, 8);
+    }
+    rectW("#ffc44d", w.x, w.y, horiz ? w.w : 5, horiz ? 5 : w.h); // yellow warning edge
+    outline(w.x, w.y, w.w, w.h);
+  }
 }

@@ -73,7 +73,7 @@ function resetRun(){
   resetPlayer();
   resetDog();
   pickups = []; parts = [];
-  for(const [px,py] of POP_SPOTS) if(!blocked(px,py,16,false)) pickups.push({t:"pop", x:px, y:py, p:R(0,6)});
+  for(const [px,py] of POP_SPOTS) if(!blocked(px,py,16,true)) pickups.push({t:"pop", x:px, y:py, p:R(0,6)});
   for(const [bx,by] of BIKE_SPOTS) if(!blocked(bx,by,16,false)) pickups.push({t:"bike", x:bx, y:by, p:0});
   npcs = makeNPCs();
   flies = [];

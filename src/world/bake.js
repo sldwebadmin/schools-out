@@ -48,11 +48,23 @@ export function bakeGroundInto(g, wx0, wy0) {
     g.fillRect(wx0+(rnd()*CHUNK_W)|0, wy0+(rnd()*CHUNK_W)|0, 5,5);
   }
 
-  /* ── 2. Construction site (512..2048, 512..1792) — reserved ────── */
+  /* ── 2. Construction site (512..2048, 512..1792) — built ────── */
   g.fillStyle="#7a6a50"; g.fillRect(512,512,1536,1280);
   tex(512,512,2048,1792, 400, "#6b5a3e","#8a7a58", 8,5);
   // Gravel patches
   tex(512,512,2048,1792, 100, "#9a8a6a","#5a4a2e", 12,8);
+  // Concrete foundation pads (under house frames)
+  g.fillStyle="#9a9090"; g.fillRect(888,590,344,336);
+  tex(888,590,1232,926, 50, "#8a8080","#a0a0a8", 10,8);
+  g.fillStyle="#9a9090"; g.fillRect(1448,840,296,316);
+  tex(1448,840,1744,1156, 35, "#8a8080","#a0a0a8", 10,8);
+  // Bulldozer mud tracks
+  g.fillStyle="#4a3420"; g.fillRect(540,720,240,46);
+  tex(540,720,780,766, 18, "#3a2818","#5a4030", 8,4);
+  g.fillStyle="#4a3420"; g.fillRect(580,640,240,86);
+  tex(580,640,820,726, 22, "#3a2818","#5a4030", 8,4);
+  // Dirt access road south of site → main road
+  dirt(2048,1760,2400,56);
 
   /* ── 3. Whispering Woods (256..2304, 2048..5632) ───────────────── */
   g.fillStyle="rgba(18,42,26,.55)"; g.fillRect(256,2048,2048,3584);

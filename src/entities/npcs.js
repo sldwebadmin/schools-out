@@ -30,6 +30,9 @@ export function makeNPCs(){
       lines:["Did you see the lake boardwalk?","Snack shack has daily popsicles!","The pond in the park has frogs!"] },
     { kind:"kid", variant:2, wps:[[1250,3310]], spd:0, shirt:"#9ad17f", hair:"#4a3322",
       lines:["Race you to the snack shack!","Heard about the construction site?","The woods go on forever south."] },
+    // Construction site — hard-hat worker patrols south interior
+    { kind:"walk", variant:0, wps:[[620,1700],[1900,1700]], pp:true, spd:1.1, shirt:"#ff8f57", hair:"#2b2118",
+      lines:["Hey! No kids in here!","This is a hard hat zone!","It's not safe — please leave!","I'm calling your parents!","Get off the site, now!","Seriously, dangerous work happening!"] },
   ];
   for(const n of npcs){
     n.x=n.wps[0][0]; n.y=n.wps[0][1];

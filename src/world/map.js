@@ -218,13 +218,65 @@ export function buildMap(){
   // Trees at east and west lake edges
   addTree(2600,6390,52); addTree(7840,6390,52);
 
-  // Construction site (NW, x=512..2048, y=512..1792)
-  addWall(512,512,1536,26,"hedge");   // north
-  addWall(512,1766,1536,26,"hedge");  // south
-  addWall(512,512,26,1280,"hedge");   // west
-  addWall(2022,512,26,1280,"hedge");  // east
+  /* ══ Construction site (x=512..2048, y=512..1792) — built ══ */
+  // Perimeter chain-link fence (hop:true — the dare of climbing in)
+  addWall(512,512,1536,26,"hedge",{hop:true});  // north
+  addWall(512,1766,1536,26,"hedge",{hop:true}); // south
+  addWall(512,512,26,1280,"hedge",{hop:true});  // west
+  addWall(2022,512,26,1280,"hedge",{hop:true}); // east
+
+  // KEEP OUT signage
   addWall(1150,560,12,14,"sign",{ghost:true,txt:"DANGER",txt2:"CONSTRUCTION ZONE"});
-  addWall(1000,900,12,14,"sign",{ghost:true,txt:"KEEP OUT",txt2:"seriously"});
+  addWall(540,560,12,14,"sign",{ghost:true,txt:"HARD HAT",txt2:"area required"});
+  addWall(1890,560,12,14,"sign",{ghost:true,txt:"AUTHORIZED",txt2:"personnel only"});
+  addWall(680,1759,12,14,"sign",{ghost:true,txt:"KEEP OUT",txt2:"seriously"});
+  addWall(1400,1759,12,14,"sign",{ghost:true,txt:"NO TRESPASSING",txt2:"city ordinance 7-41"});
+
+  // Safety cones at perimeter
+  addWall(630,545,10,10,"cone",{ghost:true});
+  addWall(1520,545,10,10,"cone",{ghost:true});
+  addWall(534,700,10,10,"cone",{ghost:true});
+  addWall(534,1560,10,10,"cone",{ghost:true});
+  addWall(2010,700,10,10,"cone",{ghost:true});
+  addWall(2010,1380,10,10,"cone",{ghost:true});
+
+  // Sleeping bulldozer (NW corner — solid, navigate around)
+  addWall(555,605,230,150,"dozer");
+
+  // House frame 1 — U-shape open south, player enters from south
+  addWall(900,600,326,14,"frame");          // north beam
+  addWall(900,600,14,310,"frame");          // west beam
+  addWall(1212,600,14,310,"frame");         // east beam
+
+  // Scaffold platform inside frame (hop:true — popsicle inside)
+  addWall(1000,626,122,84,"scaffold",{hop:true});
+
+  // House frame 2 — more complete, L-shape + partial south wall
+  addWall(1460,850,280,14,"frame");
+  addWall(1460,850,14,310,"frame");
+  addWall(1726,850,14,310,"frame");
+  addWall(1460,1146,140,14,"frame");
+
+  // Pipe stacks (NE corner)
+  addWall(1740,550,200,96,"pipe");
+  addWall(1762,666,158,74,"pipe");
+
+  // Dirt mounds
+  addWall(716,866,134,84,"mound");
+  addWall(1642,650,102,72,"mound");
+  addWall(876,1490,152,92,"mound");
+  addWall(1382,1558,132,82,"mound");
+
+  // Plywood ramps (SW area, hop:true for future race behavior)
+  addWall(638,1368,224,62,"ramp",{hop:true});
+  addWall(916,1308,62,224,"ramp",{hop:true});
+
+  // Lumber and material stacks (hop:true)
+  addWall(1682,1378,202,82,"rack",{hop:true});
+  addWall(1600,1480,182,62,"table",{hop:true});
+
+  // Site lamps
+  lamps.push({x:1280,y:640}); lamps.push({x:790,y:1250});
 
   // Athletic fields (east of school, x=6336..7360, y=1024..2112)
   addWall(6336,1024,12,14,"sign",{ghost:true,txt:"ATHLETIC FIELDS",txt2:"FIELDS UNDER PREP"});

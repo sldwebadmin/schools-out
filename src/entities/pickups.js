@@ -1,4 +1,6 @@
 export const POP_SPOTS = [
+  // Construction site — hard to reach (inside scaffold platform, requires hopping in)
+  [1061,668],
   // School district
   [5200,800],[4600,700],[5800,1400],[5200,1700],
   // Park
