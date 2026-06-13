@@ -12,11 +12,17 @@ const BUILDING_TYPES = new Set(['house', 'school', 'market', 'shack', 'treehouse
 const _cache = new WeakMap();
 
 export function buildBuildingSprites(walls){
+  let count = 0;
   for(const w of walls){
     if(!BUILDING_TYPES.has(w.type) || w.ghost) continue;
-    const sp = _bakeSprite(w);
-    if(sp) _cache.set(w, sp);
+    try {
+      const sp = _bakeSprite(w);
+      if(sp){ _cache.set(w, sp); count++; }
+    } catch(e){
+      console.error('[buildsprites] bake failed for type=' + w.type, e);
+    }
   }
+  console.log('[buildsprites] DIAGNOSTIC: built', count, 'building sprites from', walls.length, 'total walls');
 }
 
 export function getBuildingSprite(w){
