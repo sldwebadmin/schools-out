@@ -186,6 +186,16 @@ export function bakeGroundInto(g, wx0, wy0) {
   }
   g.lineWidth=1;
 
+  /* ── 6c. Water Tower Overlook (6656..7680, 512..1024) — built ─── */
+  g.fillStyle="#3d6035"; g.fillRect(6656,512,1024,512);
+  tex(6656,512,7680,1024, 280, "#47703e","#354d2c", 6,4);
+  tex(6656,512,7680,1024, 80, "#5a5545","#48443a", 12,9);
+  // Elevated stone platform under the tower
+  g.fillStyle="#8a8070"; g.fillRect(7100,630,240,210);
+  tex(7100,630,7340,840, 50, "#787060","#9a9080", 8,6);
+  // Winding dirt path from tower base south to the athletic fields gap
+  dirt(7040,840,200,90); dirt(7000,910,180,90); dirt(6960,980,180,80);
+
   /* ── 7. Shopping district (5632..7872, 2560..4480) ──────────────── */
   g.fillStyle="#3f3a60"; g.fillRect(5632,2560,2240,1920);
   g.fillStyle="#cfc6e8";

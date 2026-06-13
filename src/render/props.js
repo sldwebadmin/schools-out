@@ -459,4 +459,59 @@ export function drawWall(w, frame){
     ctx.beginPath(); ctx.arc(snap(fc-cam.x), snap(fy-cam.y), Math.floor(w.w*.18), 0, 7); ctx.stroke();
     outline(w.x, w.y, w.w, w.h);
   }
+  else if(T === "watertower"){
+    const cx = w.x + w.w/2, cy = w.y + w.h/2;
+    const legY = w.y + w.h, legH = 52;
+    // Leg drop shadows
+    rectW("rgba(0,0,0,.20)", w.x+22, legY+4, 10, legH);
+    rectW("rgba(0,0,0,.20)", w.x+w.w-32, legY+4, 10, legH);
+    // Front legs
+    rectW("#2e2e44", w.x+20, legY, 10, legH);
+    rectW("#2e2e44", w.x+w.w-30, legY, 10, legH);
+    // Cross-brace
+    ctx.strokeStyle="#252538"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(snap(w.x+20-cam.x),snap(legY-cam.y)); ctx.lineTo(snap(w.x+w.w-30-cam.x),snap(legY+legH-cam.y)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(snap(w.x+w.w-30-cam.x),snap(legY-cam.y)); ctx.lineTo(snap(w.x+20-cam.x),snap(legY+legH-cam.y)); ctx.stroke();
+    // Rear legs (slightly narrower)
+    rectW("#393952", w.x+38, legY, 7, legH-10);
+    rectW("#393952", w.x+w.w-45, legY, 7, legH-10);
+    // Tank drop shadow
+    rectW("rgba(0,0,0,.26)", w.x+6, w.y+8, w.w, w.h);
+    // Tank outer shell
+    rectW("#2e2e46", w.x, w.y, w.w, w.h);
+    // Catwalk walkway ring
+    ctx.strokeStyle="#1a1a2e"; ctx.lineWidth=6;
+    ctx.strokeRect(snap(w.x+3-cam.x)+0.5, snap(w.y+3-cam.y)+0.5, w.w-6, w.h-6);
+    // Tank top surface (water inside)
+    rectW("#38405a", w.x+8, w.y+8, w.w-16, w.h-16);
+    // Water shimmer
+    ctx.fillStyle="rgba(60,90,150,.38)";
+    ctx.fillRect(snap(w.x+10-cam.x), snap(w.y+10-cam.y), w.w-20, w.h-20);
+    // Rivets around catwalk
+    ctx.fillStyle="#252538";
+    for(let i=0;i<12;i++){
+      const ang=(i/12)*Math.PI*2;
+      const rx=cx+Math.cos(ang)*(w.w/2-5), ry=cy+Math.sin(ang)*(w.h/2-4);
+      ctx.fillRect(snap(rx-1.5-cam.x),snap(ry-1.5-cam.y),3,3);
+    }
+    // Graffiti (spray-paint tags from the older kids)
+    ctx.save();
+    ctx.font="bold 7px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle="#ff6b57"; ctx.fillText("WUZ HERE '25", snap(cx-cam.x), snap(cy-11-cam.y));
+    ctx.fillStyle="#ffc44d"; ctx.fillText("TIGER RULES", snap(cx-cam.x), snap(cy+1-cam.y));
+    ctx.fillStyle="#2ec4b6"; ctx.fillText("SENIORS RULE", snap(cx-cam.x), snap(cy+13-cam.y));
+    ctx.restore();
+    // Ladder (south face, between front legs)
+    const lx1=snap(cx-7-cam.x), lx2=snap(cx+7-cam.x);
+    const ly1=snap(w.y+w.h-3-cam.y), ly2=snap(legY+20-cam.y);
+    ctx.strokeStyle="#3a3a56"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(lx1,ly1); ctx.lineTo(lx1,ly2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lx2,ly1); ctx.lineTo(lx2,ly2); ctx.stroke();
+    ctx.lineWidth=2;
+    for(let r=0;r<=4;r++){ const ry=ly1+(ly2-ly1)*(r/4); ctx.beginPath(); ctx.moveTo(lx1,ry); ctx.lineTo(lx2,ry); ctx.stroke(); }
+    // Volume highlight (NW corner)
+    ctx.fillStyle="rgba(120,160,220,0.10)";
+    ctx.beginPath(); ctx.arc(snap(cx-w.w*.18-cam.x),snap(cy-w.h*.18-cam.y),w.w*.2,0,7); ctx.fill();
+    outline(w.x, w.y, w.w, w.h);
+  }
 }

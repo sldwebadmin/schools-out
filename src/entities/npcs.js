@@ -38,6 +38,9 @@ export function makeNPCs(){
       lines:["I got it!","Throw it back!","Watch out for the sprinklers!","Go Bulldogs!"] },
     { kind:"kid", variant:2, wps:[[7110,1182]], spd:0, shirt:"#9ad17f", hair:"#4a3322",
       lines:["Your turn!","Home run!","Nice arm!","Three up, three down!"] },
+    // Water tower overlook — kid gazing out at the view
+    { kind:"kid", variant:1, wps:[[6900,618]], spd:0, shirt:"#ff9ac1", hair:"#1b1430",
+      lines:["You can see everything from up here!","Don't tell too many people...","Is that the lake way down south?","Best view in all of Maple Court."] },
   ];
   for(const n of npcs){
     n.x=n.wps[0][0]; n.y=n.wps[0][1];

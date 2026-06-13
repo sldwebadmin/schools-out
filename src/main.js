@@ -31,6 +31,10 @@ let regionName = null, bannerT = 0;
 let insideMap = null, interiorNPCs = [], interactText = null;
 let doorCooldown = 0, savedDogMode = 'sleep';
 let joy = null, sprintHeld = false;
+// Water tower climb state
+let towerState = 0, towerT = 0, towerZoom = 0, towerClimbHold = 0;
+let vistaSeen = false, vistaText = 0;
+const TOWER_LADDER_X = 7220, TOWER_LADDER_Y = 760, TOWER_TOP_Y = 688;
 
 // Oscillating sprinklers — athletic fields hazard (each sweeps an arc, wets player+dog)
 const SPRINKLERS = [
@@ -89,6 +93,7 @@ function resetRun(){
   flies = [];
   for(let i=0;i<70;i++) flies.push({x:R(0,WORLD.w), y:R(0,WORLD.h), p:R(0,6)});
   time = 0; pops = 0;
+  towerState = 0; towerT = 0; towerZoom = 0; towerClimbHold = 0; vistaText = 0; vistaSeen = false;
 }
 
 function start(){
@@ -124,6 +129,7 @@ export function update(){
   let mx = (keys.KeyD||keys.ArrowRight?1:0) - (keys.KeyA||keys.ArrowLeft?1:0);
   let my = (keys.KeyS||keys.ArrowDown?1:0)  - (keys.KeyW||keys.ArrowUp?1:0);
   if(joy && (Math.abs(joy.dx) > 7 || Math.abs(joy.dy) > 7)){ mx = joy.dx/46; my = joy.dy/46; }
+  if(towerState > 0){ mx = 0; my = 0; } // freeze movement while climbing or at top
   const ml = Math.hypot(mx, my);
   if(ml > 1){ mx/=ml; my/=ml; }
   const sprinting = (keys.ShiftLeft||keys.ShiftRight||sprintHeld) && player.stam > 0 && ml > 0;
@@ -314,6 +320,47 @@ export function update(){
     }
   }
 
+  /* ── water tower climb state machine ───────────────────────── */
+  const upHeld = keys.KeyW || keys.ArrowUp;
+  const dnHeld = keys.KeyS || keys.ArrowDown;
+  if(towerState === 0){
+    const ld = Math.hypot(player.x - TOWER_LADDER_X, player.y - TOWER_LADDER_Y);
+    if(ld < 38){
+      if(dog.mode === "chase"){
+        interactText = {txt:"Water Tower", txt2:"Too risky while Biscuit's chasing!"};
+        towerClimbHold = 0;
+      } else if(upHeld){
+        towerClimbHold++;
+        interactText = {txt:"Water Tower", txt2:"Hold ↑ to climb..."};
+        if(towerClimbHold >= 22){ towerState = 1; towerT = 0; towerClimbHold = 0; interactText = null; }
+      } else {
+        interactText = {txt:"Water Tower", txt2:"Hold ↑ to climb"};
+        towerClimbHold = Math.max(0, towerClimbHold - 2);
+      }
+    } else {
+      towerClimbHold = 0;
+    }
+  } else if(towerState === 1){
+    towerT++;
+    const t1 = Math.min(1, towerT / 60);
+    player.x = TOWER_LADDER_X; player.y = TOWER_LADDER_Y + (TOWER_TOP_Y - TOWER_LADDER_Y) * t1;
+    towerZoom = t1;
+    if(towerT >= 60) towerState = 2;
+  } else if(towerState === 2){
+    player.x = TOWER_LADDER_X; player.y = TOWER_TOP_Y;
+    towerZoom = 1;
+    interactText = {txt:"Water Tower Overlook", txt2:"Hold ↓ to climb down"};
+    if(!vistaSeen){ vistaSeen = true; vistaText = 300; }
+    if(vistaText > 0) vistaText--;
+    if(dnHeld){ towerState = 3; towerT = 0; }
+  } else if(towerState === 3){
+    towerT++;
+    const t3 = Math.min(1, towerT / 60);
+    player.x = TOWER_LADDER_X; player.y = TOWER_TOP_Y + (TOWER_LADDER_Y - TOWER_TOP_Y) * t3;
+    towerZoom = 1 - t3;
+    if(towerT >= 60){ towerState = 0; towerZoom = 0; }
+  }
+
   const mm = Math.floor(time/60), ss = String(Math.floor(time%60)).padStart(2,"0");
   document.getElementById("scorebox").textContent = mm + ":" + ss + " · \u{1F366} " + pops;
   document.getElementById("dogfill").style.transform = "scaleX(" +
@@ -375,9 +422,14 @@ export function draw(){
   }
 
   /* ── OVERWORLD PATH ────────────────────────────────────────────── */
-  cam.x = clamp(player.x - VW/2, 0, WORLD.w - VW);
-  cam.y = clamp(player.y - VH/2, 0, WORLD.h - VH);
+  // Tower zoom: towerZoom 0→1 pulls camera back 28% at peak (scale 1.0→0.72)
+  const vZoom = 1 - towerZoom * 0.28;
+  const effW = VW / vZoom, effH = VH / vZoom;
+  cam.x = clamp(player.x - effW/2, 0, Math.max(0, WORLD.w - effW));
+  cam.y = clamp(player.y - effH/2 - towerZoom * 60, 0, Math.max(0, WORLD.h - effH));
 
+  ctx.save();
+  if(towerZoom > 0.001) ctx.scale(vZoom, vZoom);
   drawChunks(ctx, cam.x, cam.y);
   evictChunks(cam.x, cam.y);
 
@@ -466,12 +518,29 @@ export function draw(){
   drawCanopies(canopies, frame);
   drawFireflies(flies, frame);
   drawLamps(lamps);
-  drawDuskWash();
   drawSpeechBubbles(npcs, player, frame);
+  ctx.restore(); // end world-space scale transform (tower zoom)
+  drawDuskWash();
   drawMinimap(player, dog);
   drawBiscuitArrow(dog, state);
 
   if(interactText) _drawInteractOverlay(interactText);
+
+  /* water tower vista — one-time flavor text on first visit to the top */
+  if(vistaText > 0 && !isFading()){
+    const va = vistaText > 260 ? (300-vistaText)/40 : vistaText > 40 ? 1 : vistaText/40;
+    ctx.save();
+    ctx.globalAlpha = va;
+    ctx.fillStyle = "rgba(27,20,48,0.80)";
+    ctx.fillRect(VW/2-246, VH*0.80, 492, 36);
+    ctx.globalAlpha = va;
+    ctx.fillStyle = "#ffe9c2";
+    ctx.font = "italic 11px monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText('"You can see your whole summer from here."', VW/2, VH*0.80+18);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.restore();
+  }
 
   /* region name banner (ALttP-style fade) */
   if(bannerT > 0 && regionName){

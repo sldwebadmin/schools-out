@@ -280,7 +280,7 @@ export function buildMap(){
 
   /* ══ Athletic Fields (x=6336..7360, y=1024..2112) — built ══ */
   // Perimeter fences (hop:true) — north, east, south; west is open (school boundary)
-  fence(6336,1024,1024,true,[[380,540]]); // north fence, gap for entry from school
+  fence(6336,1024,1024,true,[[380,540],[724,924]]); // north fence — gaps for school entry and tower path
   fence(6336,2102,1024,true,[]);          // south fence
   fence(7330,1024,1078,false,[]);         // east fence
 
@@ -305,8 +305,12 @@ export function buildMap(){
   lamps.push({x:7060,y:1080}); lamps.push({x:7060,y:2080});
   lamps.push({x:6380,y:2080}); lamps.push({x:6820,y:2080});
 
-  // Water tower overlook (x=6656..7680, y=512..1536)
-  addWall(6700,560,12,14,"sign",{ghost:true,txt:"WATER TOWER",txt2:"CLIMB AT YOUR OWN RISK"});
+  /* ══ Water Tower Overlook (x=6656..7680, y=512..1024) — built ══ */
+  addTree(6680,530,50); addTree(6760,610,46); addTree(6710,684,44);
+  addTree(7490,542,52); addTree(7562,626,48); addTree(7522,714,44);
+  addWall(7160,660,120,80,"watertower");
+  addWall(7000,1000,12,14,"sign",{ghost:true,txt:"WATER TOWER TRAIL",txt2:"↑ follow the path"});
+  lamps.push({x:7220,y:842}); lamps.push({x:7052,y:932});
 
   // Meadow reserve (x=256..2304, y=5888..7936)
   addWall(300,5950,12,14,"sign",{ghost:true,txt:"MEADOW RESERVE",txt2:"future development"});

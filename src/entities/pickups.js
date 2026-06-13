@@ -3,6 +3,8 @@ export const POP_SPOTS = [
   [1061,668],
   // Athletic fields — inside bleachers (hop:true wall, requires jump to enter)
   [7302,1290],
+  // Water tower overlook — hidden on the hilltop east of the tower
+  [7380,648],
   // School district
   [5200,800],[4600,700],[5800,1400],[5200,1700],
   // Park

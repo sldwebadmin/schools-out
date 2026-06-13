@@ -22,8 +22,8 @@ export function bakeMini(){
   // Built non-hub regions
   B(512,   512, 1536, 1280, "#8a6a3e"); // Construction site (built)
   B(6336, 1024, 1024, 1088, "#3a6a3a"); // Athletic fields (built)
+  B(6656,  512, 1024,  512, "#4a6a52"); // Water tower overlook (built)
   // Reserved regions (darker/muted so they read as "not yet open")
-  B(6656,  512, 1024, 1024, "#4a4a6a"); // Water tower overlook
   B(2560, 6400, 5376, 1536, "#2e7a9e"); // Great Waterfront Lake (built)
   B(256,  5888, 2048, 2048, "#2c5232"); // Meadow reserve (same as base)
   // Pond
