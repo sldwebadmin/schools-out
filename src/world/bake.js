@@ -85,8 +85,8 @@ export function bakeGroundInto(g, wx0, wy0) {
   for(const [lx,ly] of [[3070,2790],[3260,2700],[3210,2810]]){
     g.beginPath(); g.ellipse(lx,ly,16,9,0,0,7); g.fill();
   }
-  // Pond paths
-  dirt(3190,2890,60,260); dirt(3220,2724,280,60);
+  // Pond paths — vertical goes south from pond bank; east-side path wraps around pond
+  dirt(3190,2890,60,260); dirt(3370,2680,80,240);
   // Community garden (east park)
   g.fillStyle="#6b4a2f"; g.fillRect(4054,3132,280,270);
   for(let ry=3152;ry<3392;ry+=36){
