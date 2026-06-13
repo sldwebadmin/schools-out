@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node tests/headless.js",
+    "test": "node tests/headless.js && node tests/validate-map.js",
     "gen-tileset": "node scripts/gen-tileset.mjs",
     "gen-map": "node scripts/gen-map.mjs",
     "gen-all": "node scripts/gen-tileset.mjs && node scripts/gen-map.mjs"
