@@ -23,7 +23,7 @@ const HOUSE_VARIANT = {
 
 // ── Image preload (top-level await) ──────────────────────────────────────
 if (typeof Image !== 'undefined') {
-  const BASE = '/sprites/me/';
+  const BASE = import.meta.env.BASE_URL + 'sprites/me/';
   const FILES = [
     ['house_1',   'Toy_House_1.png'],
     ['house_2',   'Toy_House_2.png'],
