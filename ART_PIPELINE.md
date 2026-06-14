@@ -84,6 +84,47 @@ registry with `status:'planned'` but the PNG isn't copied yet.
 
 ---
 
+## Ground autotile system
+
+LAWN (and future zones) use a 4-neighbor autotile system implemented in
+`tilerender.js`. For each tile at world position `(wx, wy)`:
+
+1. **`neighborMask(wx, wy, zone)`** — samples the 4 cardinal neighbours at
+   their tile centres (avoiding false negatives near narrow zones like the
+   28 px sidewalk strip). Returns a 4-bit bitmask: **N=1, E=2, S=4, W=8**
+   where a bit is **1 if that neighbour is the same zone**.
+
+2. **Tile selection** by bitmask value:
+
+   | Bitmask | Connected sides | Exposed | Tile | Key |
+   |---------|-----------------|---------|------|-----|
+   | 3  | N+E | SW corner | Grass_1_15 | `ground_lawn_corner_sw` |
+   | 6  | E+S | NW corner | Grass_1_3  | `ground_lawn_corner_nw` |
+   | 9  | N+W | SE corner | Grass_1_14 | `ground_lawn_corner_se` |
+   | 12 | S+W | NE corner | Grass_1_4  | `ground_lawn_corner_ne` |
+   | 7  | N+E+S | W edge  | Grass_1_8  | `ground_lawn_edge_w`    |
+   | 11 | N+E+W | S edge  | Grass_1_18 | `ground_lawn_edge_s`    |
+   | 13 | N+S+W | E edge  | Grass_1_7  | `ground_lawn_edge_e`    |
+   | 14 | E+S+W | N edge  | Grass_1_19 | `ground_lawn_edge_n`    |
+   | 15 | all   | interior| Grass_1_22 (+ 3 variant sets) | `ground_lawn_1–4` |
+
+3. **Inner corners** — when bitmask is 15 (all cardinal same) but exactly
+   one diagonal neighbour is a different zone, **`diagMask()`** detects it:
+   NE/NW/SE/SW inner corner tiles show a small notch in the corresponding
+   corner (Grass_1 tiles 11/12/9/10). Two or more missing diagonals → flat fill.
+
+4. **Fallback** — any bitmask not in the table (corridors, isolated,
+   multi-diagonal concave) uses the zone's flat interior fill. Non-ME zones
+   skip the autotile step entirely and blit from the pre-built tilecache.
+
+**Tile numbering convention (ME Exteriors Grass_1 / 22-tile set):**
+The last tile (22) is the true interior fill. The preceding group (17–21)
+contains inner-corner variants and the "other terrain" fill. Tiles 1–16
+are edge/corner/transition tiles. Always visually verify a new tile before
+assigning it to a bitmask — do not assume ordering.
+
+---
+
 ## USE_SHEETS retirement checklist
 
 `USE_SHEETS` in `src/engine/constants.js` gates all three rendering layers.

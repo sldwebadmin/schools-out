@@ -157,25 +157,65 @@ export const SPRITE_REGISTRY = [
     covers:'props.js drawWall type=goal' },
 
   // ── ME_Exteriors · Ground · LAWN (Maple Court neighbourhood + Maple Park) ──
-  // Grass_1 fill tiles: singles _11, _12, _14, _16 are confirmed interior fills
-  // (not edge/transition tiles). tile/subfolder naming: terrain/<name>.
-  // Loaded into tilecache variant slots v=0..3; drawn via drawZoneTile.
-
-  // Each variant uses a different Grass set (1–4) for subtle colour variety.
-  // These are the confirmed flat interior fill tiles (last tile of each set,
-  // which is the "all neighbors connected" autotile position — no edge markings).
+  // Autotile system: neighborMask() in tilerender.js computes 4-bit bitmask
+  // (N=1,E=2,S=4,W=8; bit=1 = same zone neighbor) and selects the right tile.
+  //
+  // Interior flat fills — one per Grass set for colour variety (variant 0–3):
   { key:'ground_lawn_1', file:'terrain/Grass_1_22.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'Maple Court / Maple Park',
-    covers:'tilecache.js drawLawn (LAWN zone variant 0)' },
+    covers:'tilecache.js drawLawn (LAWN interior variant 0)' },
   { key:'ground_lawn_2', file:'terrain/Grass_2_21.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'Maple Court / Maple Park',
-    covers:'tilecache.js drawLawn (LAWN zone variant 1)' },
+    covers:'tilecache.js drawLawn (LAWN interior variant 1)' },
   { key:'ground_lawn_3', file:'terrain/Grass_3_22.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'Maple Court / Maple Park',
-    covers:'tilecache.js drawLawn (LAWN zone variant 2)' },
+    covers:'tilecache.js drawLawn (LAWN interior variant 2)' },
   { key:'ground_lawn_4', file:'terrain/Grass_4_21.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'Maple Court / Maple Park',
-    covers:'tilecache.js drawLawn (LAWN zone variant 3)' },
+    covers:'tilecache.js drawLawn (LAWN interior variant 3)' },
+
+  // Outer corner tiles (2 adjacent sides exposed to other terrain):
+  // bitmask: N=1,E=2,S=4,W=8; tile chosen by visual inspection of Grass_1 singles.
+  { key:'ground_lawn_corner_sw', file:'terrain/Grass_1_15.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 3 (N+E connected, SW exposed)' },
+  { key:'ground_lawn_corner_nw', file:'terrain/Grass_1_3.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 6 (E+S connected, NW exposed)' },
+  { key:'ground_lawn_corner_se', file:'terrain/Grass_1_14.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 9 (N+W connected, SE exposed)' },
+  { key:'ground_lawn_corner_ne', file:'terrain/Grass_1_4.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 12 (S+W connected, NE exposed)' },
+
+  // Edge tiles (1 side exposed to other terrain):
+  { key:'ground_lawn_edge_w', file:'terrain/Grass_1_8.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 7 (N+E+S connected, W exposed)' },
+  { key:'ground_lawn_edge_e', file:'terrain/Grass_1_7.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 13 (N+S+W connected, E exposed)' },
+  { key:'ground_lawn_edge_s', file:'terrain/Grass_1_18.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 11 (N+E+W connected, S exposed)' },
+  { key:'ground_lawn_edge_n', file:'terrain/Grass_1_19.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 14 (E+S+W connected, N exposed)' },
+
+  // Inner corner tiles (all NSEW same zone, one diagonal exposed):
+  { key:'ground_lawn_ic_se', file:'terrain/Grass_1_9.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 15 + SE diagonal exposed' },
+  { key:'ground_lawn_ic_sw', file:'terrain/Grass_1_10.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 15 + SW diagonal exposed' },
+  { key:'ground_lawn_ic_ne', file:'terrain/Grass_1_11.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 15 + NE diagonal exposed' },
+  { key:'ground_lawn_ic_nw', file:'terrain/Grass_1_12.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilerender.js LAWN autotile bitmask 15 + NW diagonal exposed' },
 
   // ── ME_Exteriors · Ground · ROAD ──────────────────────────────────────
   // Asphalt_1 fill tiles: _16, _20, _22, _24 confirmed interior fills.
