@@ -161,32 +161,38 @@ export const SPRITE_REGISTRY = [
   // (not edge/transition tiles). tile/subfolder naming: terrain/<name>.
   // Loaded into tilecache variant slots v=0..3; drawn via drawZoneTile.
 
-  { key:'ground_lawn_1', file:'terrain/Grass_1_11.png', pack:'ME_Exteriors',
+  // Each variant uses a different Grass set (1–4) for subtle colour variety.
+  // These are the confirmed flat interior fill tiles (last tile of each set,
+  // which is the "all neighbors connected" autotile position — no edge markings).
+  { key:'ground_lawn_1', file:'terrain/Grass_1_22.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'Maple Court / Maple Park',
     covers:'tilecache.js drawLawn (LAWN zone variant 0)' },
-  { key:'ground_lawn_2', file:'terrain/Grass_1_12.png', pack:'ME_Exteriors',
+  { key:'ground_lawn_2', file:'terrain/Grass_2_21.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'Maple Court / Maple Park',
     covers:'tilecache.js drawLawn (LAWN zone variant 1)' },
-  { key:'ground_lawn_3', file:'terrain/Grass_1_14.png', pack:'ME_Exteriors',
+  { key:'ground_lawn_3', file:'terrain/Grass_3_22.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'Maple Court / Maple Park',
     covers:'tilecache.js drawLawn (LAWN zone variant 2)' },
-  { key:'ground_lawn_4', file:'terrain/Grass_1_16.png', pack:'ME_Exteriors',
+  { key:'ground_lawn_4', file:'terrain/Grass_4_21.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'Maple Court / Maple Park',
     covers:'tilecache.js drawLawn (LAWN zone variant 3)' },
 
   // ── ME_Exteriors · Ground · ROAD ──────────────────────────────────────
   // Asphalt_1 fill tiles: _16, _20, _22, _24 confirmed interior fills.
 
-  { key:'ground_road_1', file:'terrain/Asphalt_1_16.png', pack:'ME_Exteriors',
+  // Asphalt flat fills: tiles 25–27 are confirmed solid interior tiles.
+  // Tile 25 is reused for variant 3 (only 3 distinct flat fills in the set;
+  // repetition is imperceptible on narrow road strips).
+  { key:'ground_road_1', file:'terrain/Asphalt_1_25.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'all roads',
     covers:'tilecache.js drawRoad (ROAD zone variant 0)' },
-  { key:'ground_road_2', file:'terrain/Asphalt_1_20.png', pack:'ME_Exteriors',
+  { key:'ground_road_2', file:'terrain/Asphalt_1_26.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'all roads',
     covers:'tilecache.js drawRoad (ROAD zone variant 1)' },
-  { key:'ground_road_3', file:'terrain/Asphalt_1_22.png', pack:'ME_Exteriors',
+  { key:'ground_road_3', file:'terrain/Asphalt_1_27.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'all roads',
     covers:'tilecache.js drawRoad (ROAD zone variant 2)' },
-  { key:'ground_road_4', file:'terrain/Asphalt_1_24.png', pack:'ME_Exteriors',
+  { key:'ground_road_4', file:'terrain/Asphalt_1_25.png', pack:'ME_Exteriors',
     type:'ground', status:'active', region:'all roads',
     covers:'tilecache.js drawRoad (ROAD zone variant 3)' },
 
