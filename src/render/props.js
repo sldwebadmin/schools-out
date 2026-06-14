@@ -2,32 +2,15 @@ import { PX, USE_SHEETS } from '../engine/constants.js';
 import { snap, rectW, outline, getCtx, getCam } from './draw.js';
 import { getBuildingSprite } from './buildsprites.js';
 
-let _dbgLogged = 0;
 export function drawWall(w, frame){
   const ctx = getCtx(), cam = getCam();
   const T = w.type;
 
-  // Pre-baked building sprite (USE_SHEETS mode)
   if(USE_SHEETS && !w.ghost){
     const sp = getBuildingSprite(w);
     if(sp){
-      const sx = snap(w.x - cam.x + sp.ox);
-      const sy = snap(w.y - cam.y + sp.oy);
-      ctx.drawImage(sp.canvas, sx, sy);
-      // DIAGNOSTIC: magenta rectangle proves this path ran
-      ctx.fillStyle = 'rgba(255,0,255,0.75)';
-      ctx.fillRect(sx, sy, sp.canvas.width, 8);
-      if(_dbgLogged < 4){
-        console.log('[drawWall] SPRITE PATH: type=' + T, 'canvas=' + sp.canvas.width + 'x' + sp.canvas.height, 'at screen', sx, sy);
-        _dbgLogged++;
-      }
+      ctx.drawImage(sp.canvas, snap(w.x - cam.x + sp.ox), snap(w.y - cam.y + sp.oy));
       return;
-    }
-    // If we reach here, USE_SHEETS is on but no sprite found — log once per type
-    const _bldg = new Set(['house','school','market','shack','treehouse']);
-    if(_dbgLogged < 4 && _bldg.has(T)){
-      console.warn('[drawWall] NO SPRITE for type=' + T, 'ghost=' + w.ghost);
-      _dbgLogged++;
     }
   }
   if(T === "house"){
