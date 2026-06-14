@@ -1,4 +1,5 @@
-import { VW, VH, PX, WORLD, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
+import { VW, VH, PX, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
+import { MAPS } from './world/maps/index.js';
 import { buildSheets } from './render/sheet.js';
 import { buildTileset } from './world/tilecache.js';
 import { buildBuildingSprites } from './render/buildsprites.js';
@@ -6,13 +7,13 @@ import { R, RI, clamp } from './engine/utils.js';
 import { audio, startMusic, toggleMusic, sfx, iceCreamTruck } from './audio/synth.js';
 import { keys, setupKeyboard } from './engine/input.js';
 import { walls, canopies, lamps, doors, buildMap } from './world/map.js';
-import { regionAt } from './world/tiledata.js';
+// regionAt removed — banner name comes from section map
 import { INTERIORS } from './world/interiorMaps.js';
 import { startFade, stepFade, drawFade, isFading } from './engine/transition.js';
 import { setBounds } from './engine/collision.js';
-import { initChunks, drawChunks, evictChunks } from './world/chunks.js';
+import { initChunks, drawChunks, evictChunks, setSection } from './world/chunks.js';
 import { buildGrid } from './engine/spatialgrid.js';
-import { bakeMini } from './world/minimap.js';
+import { setSectionMini } from './world/minimap.js';
 import { blocked, moveActor } from './engine/collision.js';
 import { makeNPCs } from './entities/npcs.js';
 import { POP_SPOTS, BIKE_SPOTS } from './entities/pickups.js';
@@ -32,6 +33,7 @@ let pickups = [], parts = [], npcs = [], flies = [];
 let regionName = null, bannerT = 0;
 let insideMap = null, interiorNPCs = [], interactText = null;
 let doorCooldown = 0, savedDogMode = 'sleep';
+let currentSection = 'neighborhood';
 let joy = null, sprintHeld = false;
 // Water tower climb state
 let towerState = 0, towerT = 0, towerZoom = 0, towerClimbHold = 0;
@@ -76,24 +78,44 @@ function exitInterior(ex){
   player.x = ex.worldTarget.x; player.y = ex.worldTarget.y;
   dog.mode = savedDogMode;
   insideMap = null; interiorNPCs = []; interactText = null; doorCooldown = 60;
-  buildGrid(walls); setBounds(WORLD.w, WORLD.h);
+  buildGrid(walls); setBounds(MAPS[currentSection].w, MAPS[currentSection].h);
+}
+
+function loadSection(key) {
+  currentSection = key;
+  const map = MAPS[key];
+  // Replace global arrays in-place so all module refs stay valid
+  walls.length = 0;    walls.push(...map.walls);
+  canopies.length = 0; canopies.push(...map.canopies);
+  lamps.length = 0;    lamps.push(...map.lamps);
+  doors.length = 0;    doors.push(...map.doors.map(d => Object.assign({
+    target:null, spawnX:0, spawnY:0, worldReturn:null, txt:''
+  }, d)));
+  buildGrid(walls);
+  setBounds(map.w, map.h);
+  setSection(key, map.bakeInto, map.w, map.h);
+  initChunks();
+  setSectionMini(map.minimapBake(), 150 / map.w);
+  if(USE_SHEETS) buildBuildingSprites(walls);
+  npcs = map.npcs.map(n => Object.assign({}, n, {
+    x:n.wps[0][0], y:n.wps[0][1], i:n.wps.length>1?1:0, anim:0, face:1, dir:2
+  }));
+  pickups = [];
+  for(const [px,py] of map.pickupSpots)
+    if(!blocked(px,py,16,true)) pickups.push({t:"pop", x:px, y:py, p:R(0,6)});
+  regionName = map.name; bannerT = 240;
 }
 
 function resetRun(){
-  // Ensure we're back on the overworld
   if(insideMap !== null){
     insideMap = null; interiorNPCs = []; interactText = null;
-    buildGrid(walls); setBounds(WORLD.w, WORLD.h);
   }
   doorCooldown = 0;
   resetPlayer();
   resetDog();
-  pickups = []; parts = [];
-  for(const [px,py] of POP_SPOTS) if(!blocked(px,py,16,true)) pickups.push({t:"pop", x:px, y:py, p:R(0,6)});
-  for(const [bx,by] of BIKE_SPOTS) if(!blocked(bx,by,16,false)) pickups.push({t:"bike", x:bx, y:by, p:0});
-  npcs = makeNPCs();
-  flies = [];
-  for(let i=0;i<70;i++) flies.push({x:R(0,WORLD.w), y:R(0,WORLD.h), p:R(0,6)});
+  loadSection('neighborhood');
+  parts = []; flies = [];
+  for(let i=0;i<70;i++) flies.push({x:R(0,MAPS['neighborhood'].w), y:R(0,MAPS['neighborhood'].h), p:R(0,6)});
   time = 0; pops = 0;
   towerState = 0; towerT = 0; towerZoom = 0; towerClimbHold = 0; vistaText = 0; vistaSeen = false;
 }
@@ -197,9 +219,7 @@ export function update(){
     return; // skip overworld logic
   }
 
-  /* region banner */
-  const nr = regionAt(player.x, player.y);
-  if(nr !== regionName){ regionName = nr; if(nr) bannerT = 240; }
+  /* region banner — name set by loadSection; count down the timer */
   if(bannerT > 0) bannerT--;
 
   /* goal check */
@@ -322,6 +342,18 @@ export function update(){
     }
   }
 
+  /* ── section boundary transitions ──────────────────────────── */
+  if(!isFading() && doorCooldown <= 0 && insideMap === null){
+    for(const t of MAPS[currentSection].transitions){
+      if(player.x+player.r > t.x && player.x-player.r < t.x+t.w &&
+         player.y+player.r > t.y && player.y-player.r < t.y+t.h){
+        interactText = {txt: t.txt || 'Coming Soon!', txt2: t.txt2 || '(not open yet)'};
+        doorCooldown = 120;
+        break;
+      }
+    }
+  }
+
   /* ── water tower climb state machine ───────────────────────── */
   const upHeld = keys.KeyW || keys.ArrowUp;
   const dnHeld = keys.KeyS || keys.ArrowDown;
@@ -427,8 +459,9 @@ export function draw(){
   // Tower zoom: towerZoom 0→1 pulls camera back 28% at peak (scale 1.0→0.72)
   const vZoom = 1 - towerZoom * 0.28;
   const effW = VW / vZoom, effH = VH / vZoom;
-  cam.x = clamp(player.x - effW/2, 0, Math.max(0, WORLD.w - effW));
-  cam.y = clamp(player.y - effH/2 - towerZoom * 60, 0, Math.max(0, WORLD.h - effH));
+  const _sm = MAPS[currentSection];
+  cam.x = clamp(player.x - effW/2, 0, Math.max(0, _sm.w - effW));
+  cam.y = clamp(player.y - effH/2 - towerZoom * 60, 0, Math.max(0, _sm.h - effH));
 
   ctx.save();
   if(towerZoom > 0.001) ctx.scale(vZoom, vZoom);
@@ -599,8 +632,8 @@ export function init(){
 
   initDraw(ctx, cam);
 
-  buildMap(); buildGrid(walls); initChunks(); bakeMini(); resetRun();
-  if(USE_SHEETS){ buildSheets(); buildTileset(); buildBuildingSprites(walls); }
+  if(USE_SHEETS){ buildSheets(); buildTileset(); }
+  buildMap(); resetRun();
 
   setupKeyboard(
     () => { state === "run" ? tryHop() : start(); },

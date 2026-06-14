@@ -4,6 +4,7 @@
 // wx0, wy0: chunk's world-space origin, used for chunk-local texture PRNG.
 
 import { WORLD, GOAL, RX, HY1, HY2, CHUNK_W, DAY_SEED, USE_SHEETS } from '../engine/constants.js';
+import { zoneAt as _worldZoneAt } from './tiledata.js';
 import { mulberry32 } from '../engine/utils.js';
 import { drawTiledGround, drawAutotileEdges } from './tilerender.js';
 
@@ -43,7 +44,7 @@ export function bakeGroundInto(g, wx0, wy0) {
 
   if(USE_SHEETS){
     // ── Tiled base: all zone areas get pixel-art tile textures ─────────
-    drawTiledGround(g, wx0, wy0);
+    drawTiledGround(g, wx0, wy0, _worldZoneAt);
 
     // ── Overlay pass: detail content only (no zone base-fills) ─────────
     // Construction details (concrete pads, mud tracks, access road)
@@ -195,7 +196,7 @@ export function bakeGroundInto(g, wx0, wy0) {
 
     // Re-draw LAWN edge/corner tiles on top of road+sidewalk overlays so the
     // ME grass transition sprites are never buried by procedural fills.
-    drawAutotileEdges(g, wx0, wy0);
+    drawAutotileEdges(g, wx0, wy0, _worldZoneAt);
 
   } else {
     // ── Full procedural renderer (original, unchanged) ─────────────────

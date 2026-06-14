@@ -4,6 +4,11 @@ import { bakeCanvas } from '../engine/utils.js';
 export let mini = null;
 export let MSC = 0;
 
+export function setSectionMini(canvas, msc) {
+  mini = canvas;
+  MSC = msc;
+}
+
 export function bakeMini(){
   MSC = 150 / WORLD.w;
   const mh = Math.round(WORLD.h * MSC);

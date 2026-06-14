@@ -78,15 +78,14 @@ try {
   for(let i = 0; i < 300; i++) stepFrame();
   keys.ShiftLeft = false;
 
-  // Phase 3: teleport near NAPS[0] {x:3480, y:4760} (Biscuit's doghouse) to wake dog
-  // Place player 200px west — within the 240px wake radius
-  player.x = 3280; player.y = 4760;
+  // Phase 3: teleport near NAPS[0] (doghouse, local 920,1176) — 200px west, within 240px wake radius
+  player.x = 720; player.y = 1176;
   keys.KeyA = true; keys.KeyW = false; keys.KeyD = false; // run west (away from dog)
   for(let i = 0; i < 600; i++) stepFrame();
   keys.KeyA = false;
 
-  // Phase 4: teleport to south of school, run north to goal at (5200,1600)
-  player.x = 5200; player.y = 2500;
+  // Phase 4: run around neighborhood (goal is in school section, not reachable yet)
+  player.x = 1958; player.y = 500;
   keys.KeyW = true; keys.KeyD = false;
   for(let i = 0; i < 2700; i++) stepFrame();
 
@@ -94,10 +93,9 @@ try {
   console.log('Gameplay simulation: 5400 frames completed without runtime error');
 
   // Phase 5: interior enter/exit cycle
-  // House: yard(3760,5630,440,360) → hx=3855, hy=5730, south=5900.
-  // Door (3923,5888,64,22) extends to y=5910. Stand at y=5915 (15px south of wall).
+  // House door at local (1363,2304,64,22). Stand just south of it.
   startRun(); // reset to overworld
-  player.x = 3955; player.y = 5915;
+  player.x = 1395; player.y = 2331;
   keys.KeyW = false; keys.KeyS = false; keys.KeyA = false; keys.KeyD = false;
   // Step enough frames for fade-out (30) + swap + fade-in (30) = 60 frames
   for(let i = 0; i < 90; i++) stepFrame();
@@ -139,6 +137,7 @@ const required = [
   'src/engine/spatialgrid.js', 'src/engine/transition.js',
   'src/audio/synth.js',
   'src/world/map.js', 'src/world/bake.js', 'src/world/minimap.js',
+  'src/world/maps/neighborhood.js', 'src/world/maps/index.js',
   'src/world/chunks.js', 'src/world/tiledata.js', 'src/world/interiorMaps.js',
   'src/world/tilecache.js', 'src/world/tilerender.js',
   'src/entities/npcs.js', 'src/entities/pickups.js',

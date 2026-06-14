@@ -119,7 +119,7 @@ export const INTERIORS = {
     bg: "#4a3828",          // warm wood floor base
     walls: HOUSE_WALLS,
     exits: [
-      { x:208, y:330, w:64, h:30, worldTarget:{x:3955, y:5932} },
+      { x:208, y:330, w:64, h:30, worldTarget:{x:1395, y:2348} }, // neighborhood-local
     ],
     interactables: [
       { x:95,  y:65,  r:52, txt:"Your bed.",           txt2:"Nap later — it's summer!" },

@@ -3,7 +3,7 @@
 // lines, boardwalk, etc.) are drawn on top by _bakeOverlays in bake.js.
 
 import { TILE, CHUNK_W }                    from '../engine/constants.js';
-import { zoneAt, ZONE }                     from './tiledata.js';
+import { ZONE }                             from './tiledata.js';
 import { getTileset, TILE_W, TILE_H, VARIANTS } from './tilecache.js';
 import { getSprite }                        from '../render/spriteLoader.js';
 
@@ -20,27 +20,27 @@ function tileVariant(gtx, gty, zone) {
 // 4-neighbor bitmask: N=1, E=2, S=4, W=8 (bit=1 = same-zone neighbor).
 // Samples each neighbor at its tile centre to avoid false negatives near
 // narrow zone strips (e.g. the 28px sidewalk).
-function neighborMask(wx, wy, zone) {
+function neighborMask(wx, wy, zone, zoneAtFn) {
   const cx = wx + (TILE >> 1);
   const cy = wy + (TILE >> 1);
   let m = 0;
-  if (zoneAt(cx,        cy - TILE) === zone) m |= 1; // N
-  if (zoneAt(cx + TILE, cy       ) === zone) m |= 2; // E
-  if (zoneAt(cx,        cy + TILE) === zone) m |= 4; // S
-  if (zoneAt(cx - TILE, cy       ) === zone) m |= 8; // W
+  if (zoneAtFn(cx,        cy - TILE) === zone) m |= 1; // N
+  if (zoneAtFn(cx + TILE, cy       ) === zone) m |= 2; // E
+  if (zoneAtFn(cx,        cy + TILE) === zone) m |= 4; // S
+  if (zoneAtFn(cx - TILE, cy       ) === zone) m |= 8; // W
   return m;
 }
 
 // Diagonal mask: bit0=NE, bit1=NW, bit2=SE, bit3=SW (bit=1 = same zone).
 // Only evaluated when all 4 cardinal neighbors are same zone (mask===15).
-function diagMask(wx, wy, zone) {
+function diagMask(wx, wy, zone, zoneAtFn) {
   const cx = wx + (TILE >> 1);
   const cy = wy + (TILE >> 1);
   let m = 0;
-  if (zoneAt(cx + TILE, cy - TILE) === zone) m |= 1; // NE
-  if (zoneAt(cx - TILE, cy - TILE) === zone) m |= 2; // NW
-  if (zoneAt(cx + TILE, cy + TILE) === zone) m |= 4; // SE
-  if (zoneAt(cx - TILE, cy + TILE) === zone) m |= 8; // SW
+  if (zoneAtFn(cx + TILE, cy - TILE) === zone) m |= 1; // NE
+  if (zoneAtFn(cx - TILE, cy - TILE) === zone) m |= 2; // NW
+  if (zoneAtFn(cx + TILE, cy + TILE) === zone) m |= 4; // SE
+  if (zoneAtFn(cx - TILE, cy + TILE) === zone) m |= 8; // SW
   return m;
 }
 
@@ -83,17 +83,15 @@ const LAWN_MASK_KEY = {
   14: 'ground_lawn_edge_n',
 };
 
-function lawnKey(wx, wy, v) {
-  const mask = neighborMask(wx, wy, ZONE.LAWN);
+function lawnKey(wx, wy, v, zoneAtFn) {
+  const mask = neighborMask(wx, wy, ZONE.LAWN, zoneAtFn);
 
-  // Outer corner or edge: direct lookup.
   const edgeKey = LAWN_MASK_KEY[mask];
   if (edgeKey) return edgeKey;
 
-  // Full interior — check for inner corners (concave grass indentations).
   if (mask === 15) {
-    const dg      = diagMask(wx, wy, ZONE.LAWN);
-    const missing = (~dg) & 0xf; // bits set where diagonal ≠ same zone
+    const dg      = diagMask(wx, wy, ZONE.LAWN, zoneAtFn);
+    const missing = (~dg) & 0xf;
     const cnt = (missing & 1) + ((missing >> 1) & 1) +
                 ((missing >> 2) & 1) + ((missing >> 3) & 1);
     if (cnt === 1) {
@@ -104,7 +102,6 @@ function lawnKey(wx, wy, v) {
     }
   }
 
-  // Corridors, isolated, multiple-diagonal inner corners: flat fill.
   return 'ground_lawn_' + (v + 1);
 }
 
@@ -114,19 +111,19 @@ function lawnKey(wx, wy, v) {
 // overlays (road, sidewalk) so the ME transition sprites appear on top of
 // any procedural fills that overlap the tile boundaries.
 
-export function drawAutotileEdges(g, wx0, wy0) {
+export function drawAutotileEdges(g, wx0, wy0, zoneAtFn) {
   g.imageSmoothingEnabled = false;
   for (let ty = 0; ty < TPC; ty++) {
     for (let tx = 0; tx < TPC; tx++) {
       const wx = wx0 + tx * TILE;
       const wy = wy0 + ty * TILE;
-      if (zoneAt(wx + (TILE >> 1), wy + (TILE >> 1)) !== ZONE.LAWN) continue;
+      if (zoneAtFn(wx + (TILE >> 1), wy + (TILE >> 1)) !== ZONE.LAWN) continue;
 
       const gtx = tx + ((wx0 / TILE) | 0);
       const gty = ty + ((wy0 / TILE) | 0);
       const v   = tileVariant(gtx, gty, ZONE.LAWN);
-      const key = lawnKey(wx, wy, v);
-      if (key === 'ground_lawn_' + (v + 1)) continue; // interior flat fill — skip
+      const key = lawnKey(wx, wy, v, zoneAtFn);
+      if (key === 'ground_lawn_' + (v + 1)) continue;
 
       const img = getSprite(key);
       if (img) g.drawImage(img, 0, 0, TILE_W, TILE_H, wx, wy, TILE, TILE);
@@ -136,7 +133,7 @@ export function drawAutotileEdges(g, wx0, wy0) {
 
 // ── Main draw function ───────────────────────────────────────────────────
 
-export function drawTiledGround(g, wx0, wy0) {
+export function drawTiledGround(g, wx0, wy0, zoneAtFn) {
   const ts = getTileset();
   if (!ts) return; // tileset not built in Node/test environment
 
@@ -146,26 +143,22 @@ export function drawTiledGround(g, wx0, wy0) {
     for (let tx = 0; tx < TPC; tx++) {
       const wx   = wx0 + tx * TILE;
       const wy   = wy0 + ty * TILE;
-      const zone = zoneAt(wx, wy);
+      const zone = zoneAtFn(wx, wy);
       if (zone < 1) continue;
 
-      // Global tile coords for deterministic variant hash across chunk seams.
       const gtx = tx + ((wx0 / TILE) | 0);
       const gty = ty + ((wy0 / TILE) | 0);
       const v   = tileVariant(gtx, gty, zone);
 
-      // LAWN: autotile selects the correct ME Grass_1 single per position.
       if (zone === ZONE.LAWN) {
-        const key = lawnKey(wx, wy, v);
+        const key = lawnKey(wx, wy, v, zoneAtFn);
         const img = getSprite(key);
         if (img) {
           g.drawImage(img, 0, 0, TILE_W, TILE_H, wx, wy, TILE, TILE);
           continue;
         }
-        // sprite not loaded — fall through to tilecache flat-fill below
       }
 
-      // All other zones (and LAWN fallback): blit from pre-built tilecache.
       const srcX = v * TILE_W;
       const srcY = (zone - 1) * TILE_H;
       g.drawImage(ts, srcX, srcY, TILE_W, TILE_H, wx, wy, TILE, TILE);
