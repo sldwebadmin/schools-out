@@ -156,31 +156,74 @@ export const SPRITE_REGISTRY = [
     region:'Athletic Fields',
     covers:'props.js drawWall type=goal' },
 
-  // ── ME_Exteriors · Ground · Planned ───────────────────────────────────
-  // Replace tilerender.js / tilecache.js procedural zone fills.
-  // Key naming: ground_<ZONE_constant_name> matching tiledata.js ZONE enum.
+  // ── ME_Exteriors · Ground · LAWN (Maple Court neighbourhood + Maple Park) ──
+  // Grass_1 fill tiles: singles _11, _12, _14, _16 are confirmed interior fills
+  // (not edge/transition tiles). tile/subfolder naming: terrain/<name>.
+  // Loaded into tilecache variant slots v=0..3; drawn via drawZoneTile.
 
-  { key:'ground_meadow',    file:'Grass_1.png',      pack:'ME_Exteriors',
-    type:'ground', status:'planned', region:'Meadow Reserve / Whispering Woods',
-    covers:'tilecache.js MEADOW + LAWN + SCHOOL zones' },
-  { key:'ground_forest',    file:'Grass_2.png',      pack:'ME_Exteriors',
+  { key:'ground_lawn_1', file:'terrain/Grass_1_11.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilecache.js drawLawn (LAWN zone variant 0)' },
+  { key:'ground_lawn_2', file:'terrain/Grass_1_12.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilecache.js drawLawn (LAWN zone variant 1)' },
+  { key:'ground_lawn_3', file:'terrain/Grass_1_14.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilecache.js drawLawn (LAWN zone variant 2)' },
+  { key:'ground_lawn_4', file:'terrain/Grass_1_16.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'Maple Court / Maple Park',
+    covers:'tilecache.js drawLawn (LAWN zone variant 3)' },
+
+  // ── ME_Exteriors · Ground · ROAD ──────────────────────────────────────
+  // Asphalt_1 fill tiles: _16, _20, _22, _24 confirmed interior fills.
+
+  { key:'ground_road_1', file:'terrain/Asphalt_1_16.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'all roads',
+    covers:'tilecache.js drawRoad (ROAD zone variant 0)' },
+  { key:'ground_road_2', file:'terrain/Asphalt_1_20.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'all roads',
+    covers:'tilecache.js drawRoad (ROAD zone variant 1)' },
+  { key:'ground_road_3', file:'terrain/Asphalt_1_22.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'all roads',
+    covers:'tilecache.js drawRoad (ROAD zone variant 2)' },
+  { key:'ground_road_4', file:'terrain/Asphalt_1_24.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'all roads',
+    covers:'tilecache.js drawRoad (ROAD zone variant 3)' },
+
+  // ── ME_Exteriors · Ground · SIDEWALK ──────────────────────────────────
+  // Sidewalk_1 fill tiles: _1–_4 are solid/seam-variant fills.
+
+  { key:'ground_sidewalk_1', file:'terrain/Sidewalk_1_1.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'all sidewalks',
+    covers:'tilecache.js drawSidewalk (SIDEWALK zone variant 0)' },
+  { key:'ground_sidewalk_2', file:'terrain/Sidewalk_1_2.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'all sidewalks',
+    covers:'tilecache.js drawSidewalk (SIDEWALK zone variant 1)' },
+  { key:'ground_sidewalk_3', file:'terrain/Sidewalk_1_3.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'all sidewalks',
+    covers:'tilecache.js drawSidewalk (SIDEWALK zone variant 2)' },
+  { key:'ground_sidewalk_4', file:'terrain/Sidewalk_1_4.png', pack:'ME_Exteriors',
+    type:'ground', status:'active', region:'all sidewalks',
+    covers:'tilecache.js drawSidewalk (SIDEWALK zone variant 3)' },
+
+  // ── ME_Exteriors · Ground · Remaining zones — Planned ─────────────────
+  // (activate zone by zone after Harry approves neighbourhood look)
+
+  { key:'ground_meadow',   file:'terrain/Grass_1_11.png', pack:'ME_Exteriors',
+    type:'ground', status:'planned', region:'Meadow Reserve / wild',
+    covers:'tilecache.js MEADOW zone' },
+  { key:'ground_forest',   file:'terrain/Grass_2_X.png',  pack:'ME_Exteriors',
     type:'ground', status:'planned', region:'Whispering Woods',
-    covers:'tilecache.js FOREST zone (dark variant)' },
-  { key:'ground_road',      file:'Asphalt_1_Variation.png', pack:'ME_Exteriors',
-    type:'ground', status:'planned', region:'roads',
-    covers:'tilecache.js ROAD zone + bake.js road()' },
-  { key:'ground_sidewalk',  file:'Sidewalk_1.png',   pack:'ME_Exteriors',
-    type:'ground', status:'planned', region:'all',
-    covers:'tilecache.js SIDEWALK zone + bake.js sidewalk()' },
-  { key:'ground_blacktop',  file:'Sidewalk_3.png',   pack:'ME_Exteriors',
+    covers:'tilecache.js FOREST zone' },
+  { key:'ground_blacktop', file:'terrain/Sidewalk_3_X.png',pack:'ME_Exteriors',
     type:'ground', status:'planned', region:'School District / Maple Mart District',
     covers:'tilecache.js BLACKTOP + COURT + MARKET zones' },
-  { key:'ground_sandbox',   file:'Sidewalk_2.png',   pack:'ME_Exteriors',
+  { key:'ground_sandbox',  file:'terrain/Sand_1_X.png',    pack:'ME_Exteriors',
     type:'ground', status:'planned', region:'Maple Park / beach strip',
     covers:'tilecache.js SANDBOX zone' },
-  { key:'ground_dirt',      file:'Sidewalk_5.png',   pack:'ME_Exteriors',
-    type:'ground', status:'planned', region:'Construction Site',
-    covers:'tilecache.js DIRT + GRAVEL zones + bake.js dirt()' },
+  { key:'ground_dirt',     file:'terrain/Dirt_1_X.png',    pack:'ME_Exteriors',
+    type:'ground', status:'planned', region:'Construction Site / paths',
+    covers:'tilecache.js DIRT + GRAVEL zones' },
 
   // ── ME_Exteriors · Props · World — Planned ────────────────────────────
 

@@ -1,10 +1,13 @@
-// Procedurally-generated 32×32 pixel-art ground tiles for all 15 zone types.
+// Ground tile sheet for all 15 zone types.
 // buildTileset() is called once at startup; getTileset() returns the canvas.
 // Layout: 4 variant columns × 15 zone rows → 128×480 canvas.
+// For zones with ME Exteriors tiles loaded (via spriteLoader), those pixels
+// are used; all other zones fall back to the procedural drawers below.
 
 import { bakeCanvas } from '../engine/utils.js';
 import { mulberry32 } from '../engine/utils.js';
 import { ZONE } from './tiledata.js';
+import { getSprite } from '../render/spriteLoader.js';
 
 export const TILE_W   = 32;
 export const TILE_H   = 32;
@@ -42,18 +45,39 @@ function scatter(ctx, ox, oy, rnd, n, cols, pw, ph){
   }
 }
 
+// ── ME tile helper ────────────────────────────────────────────────────
+// Tries to draw an ME Exteriors single tile at (ox, oy).
+// Returns true if the image was loaded and drawn; false → use procedural.
+
+function drawME(ctx, ox, oy, key) {
+  const img = getSprite(key);
+  if (!img) return false;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, 0, 0, TILE_W, TILE_H, ox, oy, TILE_W, TILE_H);
+  return true;
+}
+
 // ── tile drawers ─────────────────────────────────────────────────────
 
 function drawZoneTile(ctx, ox, oy, zone, v, rnd){
   switch(zone){
     case ZONE.MEADOW:   return drawMeadow(ctx, ox, oy, v, rnd);
     case ZONE.FOREST:   return drawForest(ctx, ox, oy, v, rnd);
-    case ZONE.LAWN:     return drawLawn(ctx, ox, oy, v, rnd);
+    // LAWN — ME Grass_1 interior fills (tiles 11,12,14,16); procedural fallback
+    case ZONE.LAWN:
+      if (drawME(ctx, ox, oy, 'ground_lawn_' + (v + 1))) return;
+      return drawLawn(ctx, ox, oy, v, rnd);
     case ZONE.SCHOOL:   return drawSchoolGrass(ctx, ox, oy, v, rnd);
     case ZONE.BLACKTOP: return drawBlacktop(ctx, ox, oy, v, rnd);
     case ZONE.SANDBOX:  return drawSand(ctx, ox, oy, v, rnd);
-    case ZONE.ROAD:     return drawRoad(ctx, ox, oy, v, rnd);
-    case ZONE.SIDEWALK: return drawSidewalk(ctx, ox, oy, v, rnd);
+    // ROAD — ME Asphalt_1 interior fills (tiles 16,20,22,24); procedural fallback
+    case ZONE.ROAD:
+      if (drawME(ctx, ox, oy, 'ground_road_' + (v + 1))) return;
+      return drawRoad(ctx, ox, oy, v, rnd);
+    // SIDEWALK — ME Sidewalk_1 fills (tiles 1–4); procedural fallback
+    case ZONE.SIDEWALK:
+      if (drawME(ctx, ox, oy, 'ground_sidewalk_' + (v + 1))) return;
+      return drawSidewalk(ctx, ox, oy, v, rnd);
     case ZONE.DIRT:     return drawDirt(ctx, ox, oy, v, rnd);
     case ZONE.POND:     return drawPond(ctx, ox, oy, v, rnd);
     case ZONE.GARDEN:   return drawGarden(ctx, ox, oy, v, rnd);
