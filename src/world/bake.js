@@ -173,7 +173,7 @@ export function bakeGroundInto(g, wx0, wy0) {
     dirt(700,3500,40,2060);
     dirt(500,5540,260,50);
 
-    // Sidewalks + main roads + cul-de-sac + road markings (procedural on tiles)
+    // Sidewalks + main roads + road markings (procedural on tiles)
     sidewalk(4420,3584,28,2816);
     sidewalk(4588,3584,28,2816);
     sidewalk(2560,HY1-28,2560,28); sidewalk(2560,HY1+140,2560,28);
@@ -181,10 +181,6 @@ export function bakeGroundInto(g, wx0, wy0) {
     road(RX,2112,140,4288);
     road(2560,HY1,2560,140);
     road(2560,HY2,2560,140);
-    g.fillStyle="#46406b"; g.beginPath(); g.arc(4518,5888,150,0,7); g.fill();
-    g.strokeStyle="#353055"; g.lineWidth=5; g.beginPath(); g.arc(4518,5888,148,0,7); g.stroke();
-    g.fillStyle="#4c7a4f"; g.beginPath(); g.arc(4518,5888,44,0,7); g.fill();
-    g.fillStyle="#ff9ac1"; g.fillRect(4506,5876,5,5); g.fillStyle="#ffd27a"; g.fillRect(4526,5890,5,5);
     g.fillStyle="#8d80b8";
     for(let y=2116;y<6380;y+=64) g.fillRect(RX+66,y,8,28);
     for(let x=2584;x<5104;x+=64) g.fillRect(x,HY1+66,28,8);
@@ -379,13 +375,7 @@ export function bakeGroundInto(g, wx0, wy0) {
     road(2560,HY1,2560,140);
     road(2560,HY2,2560,140);
 
-    /* ── 13. Cul-de-sac (centre 4518,5888) ──────────────────────────── */
-    g.fillStyle="#46406b"; g.beginPath(); g.arc(4518,5888,150,0,7); g.fill();
-    g.strokeStyle="#353055"; g.lineWidth=5; g.beginPath(); g.arc(4518,5888,148,0,7); g.stroke();
-    g.fillStyle="#4c7a4f"; g.beginPath(); g.arc(4518,5888,44,0,7); g.fill();
-    g.fillStyle="#ff9ac1"; g.fillRect(4506,5876,5,5); g.fillStyle="#ffd27a"; g.fillRect(4526,5890,5,5);
-
-    /* ── 14. Road markings ───────────────────────────────────────────── */
+    /* ── 13. Road markings ───────────────────────────────────────────── */
     g.fillStyle="#8d80b8";
     for(let y=2116;y<6380;y+=64) g.fillRect(RX+66,y,8,28);
     for(let x=2584;x<5104;x+=64) g.fillRect(x,HY1+66,28,8);

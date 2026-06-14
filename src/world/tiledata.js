@@ -62,9 +62,6 @@ export function zoneAt(px, py) {
   if(px>=4700 && px<4960 && py>=3700 && py<3900) return ZONE.COURT;
   // Community garden (park)
   if(px>=4054 && px<4334 && py>=3132 && py<3402) return ZONE.GARDEN;
-  // Cul-de-sac circle (centre 4518,5888 r=150)
-  const cdx=px+16-4518, cdy=py+16-5888;
-  if(cdx*cdx+cdy*cdy < 150*150) return ZONE.ROAD;
   // Pond ellipse (centre 3200,2750 rx=218 ry=112)
   const pex=(px+16-3200)/218, pey=(py+16-2750)/112;
   if(pex*pex+pey*pey < 1) return ZONE.POND;
