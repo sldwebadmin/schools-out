@@ -108,6 +108,32 @@ function lawnKey(wx, wy, v) {
   return 'ground_lawn_' + (v + 1);
 }
 
+// ── Post-overlay border pass ─────────────────────────────────────────────
+//
+// Re-draws only LAWN edge/corner/inner-corner tiles, called AFTER bake.js
+// overlays (road, sidewalk) so the ME transition sprites appear on top of
+// any procedural fills that overlap the tile boundaries.
+
+export function drawAutotileEdges(g, wx0, wy0) {
+  g.imageSmoothingEnabled = false;
+  for (let ty = 0; ty < TPC; ty++) {
+    for (let tx = 0; tx < TPC; tx++) {
+      const wx = wx0 + tx * TILE;
+      const wy = wy0 + ty * TILE;
+      if (zoneAt(wx + (TILE >> 1), wy + (TILE >> 1)) !== ZONE.LAWN) continue;
+
+      const gtx = tx + ((wx0 / TILE) | 0);
+      const gty = ty + ((wy0 / TILE) | 0);
+      const v   = tileVariant(gtx, gty, ZONE.LAWN);
+      const key = lawnKey(wx, wy, v);
+      if (key === 'ground_lawn_' + (v + 1)) continue; // interior flat fill — skip
+
+      const img = getSprite(key);
+      if (img) g.drawImage(img, 0, 0, TILE_W, TILE_H, wx, wy, TILE, TILE);
+    }
+  }
+}
+
 // ── Main draw function ───────────────────────────────────────────────────
 
 export function drawTiledGround(g, wx0, wy0) {

@@ -5,7 +5,7 @@
 
 import { WORLD, GOAL, RX, HY1, HY2, CHUNK_W, DAY_SEED, USE_SHEETS } from '../engine/constants.js';
 import { mulberry32 } from '../engine/utils.js';
-import { drawTiledGround } from './tilerender.js';
+import { drawTiledGround, drawAutotileEdges } from './tilerender.js';
 
 export function bakeGroundInto(g, wx0, wy0) {
   const W = WORLD.w, H = WORLD.h;
@@ -196,6 +196,10 @@ export function bakeGroundInto(g, wx0, wy0) {
       g.fillStyle="#2e294a"; g.beginPath(); g.arc(mx,my,11,0,7); g.fill();
       g.strokeStyle="#55517a"; g.lineWidth=3; g.beginPath(); g.arc(mx,my,7,0,7); g.stroke();
     }
+
+    // Re-draw LAWN edge/corner tiles on top of road+sidewalk overlays so the
+    // ME grass transition sprites are never buried by procedural fills.
+    drawAutotileEdges(g, wx0, wy0);
 
   } else {
     // ── Full procedural renderer (original, unchanged) ─────────────────
