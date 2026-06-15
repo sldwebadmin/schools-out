@@ -152,21 +152,42 @@ try {
     else console.log(`Chore: Wash Dishes done, +$5 (balance: $${getMoney()})`);
   }
 
-  // Phase 8: friendship system — API and level thresholds
-  const { addFriendship, getFriendship, getFriendLevel, friendStars } =
+  // Phase 8: friendship system — once-per-day cooldown and level thresholds
+  const { grantFriendship, canInteract, getFriendship, getFriendLevel, getFriendLevelName } =
     await import('../src/engine/friends.js');
-  addFriendship('jordan', 5);
-  if(getFriendship('jordan') !== 5)
-    errors.push(`Friendship: expected 5, got ${getFriendship('jordan')}`);
-  if(getFriendLevel('jordan') !== 1)
-    errors.push(`FriendLevel: expected 1 at 5pts, got ${getFriendLevel('jordan')}`);
-  addFriendship('jordan', 15); // now 20
-  if(getFriendLevel('jordan') !== 2)
-    errors.push(`FriendLevel: expected 2 at 20pts, got ${getFriendLevel('jordan')}`);
-  addFriendship('jordan', 100); // clamps at 100
-  if(getFriendship('jordan') > 100)
-    errors.push(`Friendship: should cap at 100, got ${getFriendship('jordan')}`);
-  console.log(`Friendship: Jordan=${getFriendship('jordan')} ${friendStars('jordan')} (Lv.${getFriendLevel('jordan')})`);
+
+  // First talk: should succeed
+  const ok1 = grantFriendship('test_npc', 'talk', 3, 100);
+  if(!ok1) errors.push('First talk: expected granted, got blocked');
+  if(getFriendship('test_npc') !== 3)
+    errors.push(`After first talk: expected 3pts, got ${getFriendship('test_npc')}`);
+
+  // Second talk same day: blocked by cooldown
+  const ok2 = grantFriendship('test_npc', 'talk', 3, 100);
+  if(ok2) errors.push('Second talk same day: expected blocked, got granted');
+  if(getFriendship('test_npc') !== 3)
+    errors.push(`After blocked talk: expected still 3pts, got ${getFriendship('test_npc')}`);
+
+  // Next day: should succeed
+  const ok3 = grantFriendship('test_npc', 'talk', 3, 101);
+  if(!ok3) errors.push('Next-day talk: expected granted, got blocked');
+  if(getFriendship('test_npc') !== 6)
+    errors.push(`After next-day talk: expected 6pts, got ${getFriendship('test_npc')}`);
+
+  // Level thresholds: push to 10 → Acquaintance, 30 → Casual Friend, 60 → Close Friend, 90 → Best Friend
+  grantFriendship('test_npc', 'talk', 100, 102); // caps at 100
+  if(getFriendship('test_npc') > 100)
+    errors.push(`Friendship cap: expected ≤100, got ${getFriendship('test_npc')}`);
+  if(getFriendLevelName('test_npc') !== 'Best Friend')
+    errors.push(`Level at 100pts: expected Best Friend, got ${getFriendLevelName('test_npc')}`);
+
+  // canInteract reflects cooldown correctly
+  if(!canInteract('fresh_npc', 100)) errors.push('New NPC: expected interactable');
+  grantFriendship('fresh_npc', 'talk', 3, 100);
+  if(canInteract('fresh_npc', 100)) errors.push('After grant: expected NOT interactable same day');
+  if(!canInteract('fresh_npc', 101)) errors.push('Next day: expected interactable again');
+
+  console.log(`Friendship: test_npc=${getFriendship('test_npc')} (${getFriendLevelName('test_npc')}), talk ok1=${ok1} ok2=${ok2} ok3=${ok3}`);
 
 } catch(e) {
   errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));

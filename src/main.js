@@ -1,7 +1,7 @@
 import { VW, VH, PX, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
 import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay } from './engine/clock.js';
 import { earnMoney, getMoney } from './engine/money.js';
-import { addFriendship, getFriendLevel, friendStars } from './engine/friends.js';
+import { grantFriendship, canInteract, getFriendLevelName } from './engine/friends.js';
 import { MAPS } from './world/maps/index.js';
 import { buildSheets } from './render/sheet.js';
 import { buildTileset } from './world/tilecache.js';
@@ -65,6 +65,25 @@ function fit(){
 function tryHop(){
   if(player.hopCd > 0 || player.hop > 0) return;
   player.hop = 18; player.hopCd = 42; sfx.hop();
+}
+
+// Talk to the nearest friend NPC within range. Returns true if handled (suppress hop).
+function talkToNearestFriend(){
+  if(state !== "run" || isFading() || insideMap !== null) return false;
+  for(const n of npcs){
+    if(!n.friendKey) continue;
+    if(Math.hypot(player.x - n.x, player.y - n.y) < 80){
+      const granted = grantFriendship(n.friendKey, 'talk', 3, getGameDay());
+      const lvlName = getFriendLevelName(n.friendKey);
+      interactText = granted
+        ? { txt: n.name, txt2: `${lvlName}  ·  Nice chat!` }
+        : { txt: n.name, txt2: `${lvlName}  ·  Already caught up today!` };
+      if(granted) sfx.pickup();
+      doorCooldown = 90;
+      return true;
+    }
+  }
+  return false;
 }
 
 function enterInterior(d){
@@ -437,23 +456,15 @@ export function update(){
   }
   if(!_nearOActivity) activityHoldT = 0;
 
-  /* friend NPC proximity — tick friendship, show star indicator */
-  for(const n of npcs){
-    if(!n.friendKey) continue;
-    const dist = Math.hypot(player.x - n.x, player.y - n.y);
-    if(dist < 80){
-      n._visitT = (n._visitT || 0) + 1;
-      // +1 friendship every 2 real seconds of proximity, up to 5pts per visit
-      if(n._visitT > 0 && n._visitT <= 600 && n._visitT % 120 === 0)
-        addFriendship(n.friendKey, 1);
-      // Show indicator unless mid-activity
-      if(!activityHoldT){
-        const lvl = getFriendLevel(n.friendKey);
-        const lbl = ['Stranger','Acquaintance','Friend!','Good friend!','Best friend!'][lvl];
-        interactText = { txt: n.name, txt2: `${friendStars(n.friendKey)}  ${lbl}` };
+  /* friend NPC proximity — show level + chat prompt; no auto-grant */
+  if(!doorCooldown && !activityHoldT){
+    for(const n of npcs){
+      if(!n.friendKey) continue;
+      if(Math.hypot(player.x - n.x, player.y - n.y) < 80){
+        const ok = canInteract(n.friendKey, getGameDay());
+        interactText = { txt: n.name, txt2: `${getFriendLevelName(n.friendKey)}  ·  ${ok ? '[Space] Chat' : 'Already caught up today!'}` };
+        break;
       }
-    } else {
-      n._visitT = 0;
     }
   }
 
@@ -749,7 +760,7 @@ export function init(){
   buildMap(); resetRun();
 
   setupKeyboard(
-    () => { state === "run" ? tryHop() : start(); },
+    () => { if(state === "title") start(); else if(state === "run") talkToNearestFriend() || tryHop(); },
     toggleMusic
   );
 
@@ -768,7 +779,7 @@ export function init(){
   const endJoy = e => { if(joy && e.pointerId === joy.id) joy = null; };
   cv.addEventListener("pointerup", endJoy); cv.addEventListener("pointercancel", endJoy);
 
-  document.getElementById("btnHop").addEventListener("pointerdown", e => { e.preventDefault(); state==="run" ? tryHop() : start(); });
+  document.getElementById("btnHop").addEventListener("pointerdown", e => { e.preventDefault(); if(state==="run") talkToNearestFriend() || tryHop(); else start(); });
   const bS = document.getElementById("btnSprint");
   bS.addEventListener("pointerdown", e => { e.preventDefault(); sprintHeld = true; bS.classList.add("on"); });
   const sOff = () => { sprintHeld = false; bS.classList.remove("on"); };
