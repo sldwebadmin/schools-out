@@ -109,6 +109,15 @@ try {
   if(getInsideMap() !== null) errors.push(`Expected insideMap=null after exiting, got '${getInsideMap()}'`);
   else console.log('Interior exit: OK (back on overworld)');
 
+  // Phase 6: clock system — sleep advances the day counter
+  const { getGameDay, sleep: clockSleepFn, getClockDisplay, getDayPart } =
+    await import('../src/engine/clock.js');
+  const dayBefore = getGameDay();
+  clockSleepFn();
+  if(getGameDay() !== dayBefore + 1)
+    errors.push(`sleep() should advance day by 1: ${dayBefore} → ${dayBefore+1}, got ${getGameDay()}`);
+  else console.log(`Clock: ${getClockDisplay()}, day-part: ${getDayPart().name}, game day: ${getGameDay()}`);
+
 } catch(e) {
   errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));
 }
@@ -132,7 +141,7 @@ try {
 /* ── Module file structure ───────────────────────────────────────── */
 const required = [
   'index.html', 'styles.css', 'src/main.js',
-  'src/engine/constants.js', 'src/engine/utils.js',
+  'src/engine/constants.js', 'src/engine/utils.js', 'src/engine/clock.js',
   'src/engine/collision.js', 'src/engine/input.js',
   'src/engine/spatialgrid.js', 'src/engine/transition.js',
   'src/audio/synth.js',

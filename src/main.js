@@ -1,4 +1,5 @@
 import { VW, VH, PX, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
+import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay } from './engine/clock.js';
 import { MAPS } from './world/maps/index.js';
 import { buildSheets } from './render/sheet.js';
 import { buildTileset } from './world/tilecache.js';
@@ -35,6 +36,7 @@ let insideMap = null, interiorNPCs = [], interactText = null;
 let doorCooldown = 0, savedDogMode = 'sleep';
 let currentSection = 'neighborhood';
 let joy = null, sprintHeld = false;
+let sleepHoldT = 0;
 // Water tower climb state
 let towerState = 0, towerT = 0, towerZoom = 0, towerClimbHold = 0;
 let vistaSeen = false, vistaText = 0;
@@ -78,7 +80,20 @@ function exitInterior(ex){
   player.x = ex.worldTarget.x; player.y = ex.worldTarget.y;
   dog.mode = savedDogMode;
   insideMap = null; interiorNPCs = []; interactText = null; doorCooldown = 60;
+  sleepHoldT = 0;
   buildGrid(walls); setBounds(MAPS[currentSection].w, MAPS[currentSection].h);
+}
+
+function doSleep(){
+  clockSleep();
+  sleepHoldT = 0;
+  const ex = INTERIORS['house'].exits[0];
+  player.x = ex.worldTarget.x; player.y = ex.worldTarget.y;
+  dog.mode = savedDogMode;
+  insideMap = null; interiorNPCs = []; interactText = null; doorCooldown = 60;
+  buildGrid(walls); setBounds(MAPS[currentSection].w, MAPS[currentSection].h);
+  regionName = `Day ${getGameDay()} · Good morning!`;
+  bannerT = 300;
 }
 
 function loadSection(key) {
@@ -114,9 +129,9 @@ function resetRun(){
   resetPlayer();
   resetDog();
   loadSection('neighborhood');
-  parts = []; flies = [];
+  parts = []; flies = []; sleepHoldT = 0;
   for(let i=0;i<70;i++) flies.push({x:R(0,MAPS['neighborhood'].w), y:R(0,MAPS['neighborhood'].h), p:R(0,6)});
-  time = 0; pops = 0;
+  time = 0; pops = 0; resetDay();
   towerState = 0; towerT = 0; towerZoom = 0; towerClimbHold = 0; vistaText = 0; vistaSeen = false;
 }
 
@@ -147,6 +162,7 @@ export function update(){
   stepFade();
   if(state !== "run") return;
   time += 1/60;
+  tickClock();
   if(missionT > 0){ missionT--; document.getElementById("mission").style.opacity = missionT > 60 ? 1 : missionT/60; }
 
   /* player */
@@ -191,8 +207,22 @@ export function update(){
     }
     // Interactable proximity
     interactText = null;
+    let _nearBed = false;
     for(const ia of INTERIORS[insideMap].interactables){
       if(Math.hypot(player.x-ia.x, player.y-ia.y) < ia.r + 14){
+        if(ia.sleep && !isFading()){
+          _nearBed = true;
+          const upHeld = keys.KeyW || keys.ArrowUp;
+          if(upHeld){
+            sleepHoldT++;
+            interactText = {txt:"Your bed", txt2:`Hold ↑ to sleep · Day ${getGameDay()+1} tomorrow`};
+            if(sleepHoldT >= 22) startFade(doSleep);
+          } else {
+            sleepHoldT = Math.max(0, sleepHoldT - 2);
+            interactText = {txt:"Your bed", txt2:"Hold ↑ to sleep"};
+          }
+          break;
+        }
         if(ia.pickup && !ia.claimed){
           let ok = true;
           if(ia._key){
@@ -210,6 +240,7 @@ export function update(){
         interactText = ia; break;
       }
     }
+    if(!_nearBed) sleepHoldT = 0;
     // Interior NPCs face player
     for(const n of interiorNPCs){
       n.anim += .04;
@@ -395,8 +426,7 @@ export function update(){
     if(towerT >= 60){ towerState = 0; towerZoom = 0; }
   }
 
-  const mm = Math.floor(time/60), ss = String(Math.floor(time%60)).padStart(2,"0");
-  document.getElementById("scorebox").textContent = mm + ":" + ss + " · \u{1F366} " + pops;
+  document.getElementById("scorebox").textContent = `Day ${getGameDay()} · ${getClockDisplay()} · \u{1F366} ${pops}`;
   document.getElementById("dogfill").style.transform = "scaleX(" +
     (dog.mode === "sleep" ? 0 : clamp(1 - (ddRaw-26)/520, 0, 1)) + ")";
   document.getElementById("stamfill").style.transform = "scaleX(" + (player.stam/100) + ")";
@@ -628,7 +658,7 @@ export function init(){
   fit();
   addEventListener("resize", fit);
 
-  document.getElementById("daylabel").textContent = "Summer Day " + DAY_NUM + " · Maple Court";
+  document.getElementById("daylabel").textContent = "Day " + getGameDay() + " · Maple Court";
 
   initDraw(ctx, cam);
 

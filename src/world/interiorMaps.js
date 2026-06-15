@@ -122,7 +122,7 @@ export const INTERIORS = {
       { x:208, y:330, w:64, h:30, worldTarget:{x:1395, y:2348} }, // neighborhood-local
     ],
     interactables: [
-      { x:95,  y:65,  r:52, txt:"Your bed.",           txt2:"Nap later — it's summer!" },
+      { x:95,  y:65,  r:52, txt:"Your bed", txt2:"Hold ↑ to sleep", sleep:true },
       { x:385, y:65,  r:52, txt:"Bookshelf",           txt2:"‘Summer Reading’ — still blank." },
       { x:60,  y:225, r:46, txt:"Fridge",              txt2:"Leftover pizza. Classic." },
       { x:270, y:50,  r:40, txt:"Desk calendar",       txt2:`Day ${DAY_NUM} of summer break.` },
