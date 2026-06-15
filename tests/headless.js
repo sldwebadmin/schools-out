@@ -49,7 +49,7 @@ global.AudioContext = undefined;
 global.webkitAudioContext = undefined;
 
 /* ── Import game (stubs must be set up first) ────────────────────── */
-const { init, startRun, stepFrame, keys, player, dog, getState, getInsideMap, getDoorCooldown } =
+const { init, startRun, stepFrame, keys, player, dog, getState, getInsideMap, getDoorCooldown, getActivityHoldT } =
   await import('../src/main.js');
 
 /* ── Simulate gameplay ───────────────────────────────────────────── */
@@ -111,13 +111,46 @@ try {
   else console.log('Interior exit: OK (back on overworld)');
 
   // Phase 6: clock system — sleep advances the day counter
-  const { getGameDay, sleep: clockSleepFn, getClockDisplay, getDayPart } =
+  const { getGameDay, sleep: clockSleepFn, getClockDisplay, getDayPart, advanceClock, getClockMinutes } =
     await import('../src/engine/clock.js');
   const dayBefore = getGameDay();
   clockSleepFn();
   if(getGameDay() !== dayBefore + 1)
     errors.push(`sleep() should advance day by 1: ${dayBefore} → ${dayBefore+1}, got ${getGameDay()}`);
   else console.log(`Clock: ${getClockDisplay()}, day-part: ${getDayPart().name}, game day: ${getGameDay()}`);
+
+  // Phase 7: money system — earn API, clock advance, in-game chore
+  const { getMoney, earnMoney } = await import('../src/engine/money.js');
+  const balBefore = getMoney();
+  earnMoney(10);
+  if(getMoney() !== balBefore + 10)
+    errors.push(`earnMoney(10): expected $${balBefore+10}, got $${getMoney()}`);
+  else console.log(`Money API: $${getMoney()} after earn $10`);
+
+  const minBefore = getClockMinutes();
+  advanceClock(30);
+  if(getClockMinutes() !== minBefore + 30)
+    errors.push(`advanceClock(30): expected ${minBefore+30} min, got ${getClockMinutes()}`);
+  else console.log(`Clock advance: +30 min, now ${getClockMinutes()} min from midnight`);
+
+  // In-game: enter house, complete Wash Dishes chore (240 frames), verify +$5
+  startRun();
+  player.x = 1395; player.y = 2331;
+  keys.KeyW = false; keys.KeyS = false; keys.KeyA = false; keys.KeyD = false;
+  for(let i = 0; i < 200; i++) stepFrame(); // enter house (fade 30 + margin 140)
+  if(getInsideMap() !== 'house'){
+    errors.push(`Phase 7 chore setup: expected inside house, got '${getInsideMap()}'`);
+  } else {
+    player.x = 150; player.y = 215; // kitchen sink
+    const choreMoney = getMoney();
+    keys.ArrowUp = true;
+    for(let i = 0; i < 260; i++) stepFrame();
+    keys.ArrowUp = false;
+    console.log(`Chore debug: activityHoldT=${getActivityHoldT()}, player=(${player.x|0},${player.y|0}), money=${getMoney()}`);
+    if(getMoney() !== choreMoney + 5)
+      errors.push(`Wash dishes: expected +$5, balance $${getMoney()} (was $${choreMoney})`);
+    else console.log(`Chore: Wash Dishes done, +$5 (balance: $${getMoney()})`);
+  }
 
 } catch(e) {
   errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));
@@ -142,7 +175,7 @@ try {
 /* ── Module file structure ───────────────────────────────────────── */
 const required = [
   'index.html', 'styles.css', 'src/main.js',
-  'src/engine/constants.js', 'src/engine/utils.js', 'src/engine/clock.js',
+  'src/engine/constants.js', 'src/engine/utils.js', 'src/engine/clock.js', 'src/engine/money.js',
   'src/engine/collision.js', 'src/engine/input.js',
   'src/engine/spatialgrid.js', 'src/engine/transition.js',
   'src/audio/synth.js',

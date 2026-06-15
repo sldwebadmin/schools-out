@@ -51,6 +51,9 @@ export function sleep() {
   try { if (typeof localStorage !== 'undefined') localStorage.setItem('schools_day', String(_gameDay)); } catch(e) {}
 }
 
+// Advance clock by N in-game minutes (used by activities that consume time).
+export function advanceClock(minutes) { _frames += minutes * FRAMES_PER_MINUTE; }
+
 // Resets in-game time to morning without changing the day counter.
 // Call from resetRun so "play again" resumes the current game day at 8 AM.
 export function resetDay() { _frames = 0; }

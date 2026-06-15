@@ -93,6 +93,15 @@ const SHACK_WALLS = [
   W(240,55,50,35,'house',{hop:true,hue:'#3a7a8a',trim:'#ffe9c2'}),
 ];
 
+// Reset all interior activity claimed flags — call on sleep/new day.
+export function resetChores() {
+  for (const interior of Object.values(INTERIORS)) {
+    for (const ia of interior.interactables) {
+      if (ia.activity) ia.activity.claimed = false;
+    }
+  }
+}
+
 export const INTERIORS = {
   treehouse_hq: {
     name: "Treehouse Club HQ",
@@ -123,9 +132,16 @@ export const INTERIORS = {
     ],
     interactables: [
       { x:95,  y:65,  r:52, txt:"Your bed", txt2:"Hold ↑ to sleep", sleep:true },
-      { x:385, y:65,  r:52, txt:"Bookshelf",           txt2:"‘Summer Reading’ — still blank." },
-      { x:60,  y:225, r:46, txt:"Fridge",              txt2:"Leftover pizza. Classic." },
-      { x:270, y:50,  r:40, txt:"Desk calendar",       txt2:`Day ${DAY_NUM} of summer break.` },
+      { x:385, y:65,  r:52, txt:"Bookshelf",     txt2:"'Summer Reading' — still blank." },
+      { x:60,  y:225, r:46, txt:"Fridge",        txt2:"Leftover pizza. Classic." },
+      { x:270, y:50,  r:40, txt:"Desk calendar", txt2:`Day ${DAY_NUM} of summer break.` },
+      // ── Chores ──────────────────────────────────────────────────────────
+      { x:150, y:215, r:52, txt:"Kitchen Sink",  txt2:"Hold ↑ to wash dishes",
+        activity:{ key:'chore_dishes', durationFrames:240, timeMinutes:10, pay:5,
+                   doneTxt:"Dishes done! +$5", label:"Washing dishes" } },
+      { x:240, y:145, r:55, txt:"Your Room",     txt2:"Hold ↑ to tidy up",
+        activity:{ key:'chore_tidy',   durationFrames:360, timeMinutes:15, pay:8,
+                   doneTxt:"Room tidied! +$8", label:"Tidying up" } },
     ],
     npcs: [],
   },

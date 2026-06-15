@@ -1,5 +1,6 @@
 import { VW, VH, PX, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
-import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay } from './engine/clock.js';
+import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay, advanceClock } from './engine/clock.js';
+import { earnMoney, getMoney } from './engine/money.js';
 import { MAPS } from './world/maps/index.js';
 import { buildSheets } from './render/sheet.js';
 import { buildTileset } from './world/tilecache.js';
@@ -9,7 +10,7 @@ import { audio, startMusic, toggleMusic, sfx, iceCreamTruck } from './audio/synt
 import { keys, setupKeyboard } from './engine/input.js';
 import { walls, canopies, lamps, doors, buildMap } from './world/map.js';
 // regionAt removed — banner name comes from section map
-import { INTERIORS } from './world/interiorMaps.js';
+import { INTERIORS, resetChores } from './world/interiorMaps.js';
 import { startFade, stepFade, drawFade, isFading } from './engine/transition.js';
 import { setBounds } from './engine/collision.js';
 import { initChunks, drawChunks, evictChunks, setSection } from './world/chunks.js';
@@ -37,6 +38,8 @@ let doorCooldown = 0, savedDogMode = 'sleep';
 let currentSection = 'neighborhood';
 let joy = null, sprintHeld = false;
 let sleepHoldT = 0;
+let activities = [];
+let activityHoldT = 0;
 // Water tower climb state
 let towerState = 0, towerT = 0, towerZoom = 0, towerClimbHold = 0;
 let vistaSeen = false, vistaText = 0;
@@ -73,20 +76,22 @@ function enterInterior(d){
   savedDogMode = dog.mode; dog.mode = 'sleep'; // pause dog
   buildGrid(interior.walls);
   setBounds(interior.w, interior.h);
-  interactText = null; doorCooldown = 60;
+  interactText = null; doorCooldown = 60; activityHoldT = 0;
 }
 
 function exitInterior(ex){
   player.x = ex.worldTarget.x; player.y = ex.worldTarget.y;
   dog.mode = savedDogMode;
   insideMap = null; interiorNPCs = []; interactText = null; doorCooldown = 60;
-  sleepHoldT = 0;
+  sleepHoldT = 0; activityHoldT = 0;
   buildGrid(walls); setBounds(MAPS[currentSection].w, MAPS[currentSection].h);
 }
 
 function doSleep(){
   clockSleep();
-  sleepHoldT = 0;
+  sleepHoldT = 0; activityHoldT = 0;
+  resetChores();
+  for(const ia of activities) if(ia.activity) ia.activity.claimed = false;
   const ex = INTERIORS['house'].exits[0];
   player.x = ex.worldTarget.x; player.y = ex.worldTarget.y;
   dog.mode = savedDogMode;
@@ -115,6 +120,7 @@ function loadSection(key) {
   npcs = map.npcs.map(n => Object.assign({}, n, {
     x:n.wps[0][0], y:n.wps[0][1], i:n.wps.length>1?1:0, anim:0, face:1, dir:2
   }));
+  activities = map.activities || [];
   pickups = [];
   for(const [px,py] of map.pickupSpots)
     if(!blocked(px,py,16,true)) pickups.push({t:"pop", x:px, y:py, p:R(0,6)});
@@ -129,7 +135,7 @@ function resetRun(){
   resetPlayer();
   resetDog();
   loadSection('neighborhood');
-  parts = []; flies = []; sleepHoldT = 0;
+  parts = []; flies = []; sleepHoldT = 0; activityHoldT = 0;
   for(let i=0;i<70;i++) flies.push({x:R(0,MAPS['neighborhood'].w), y:R(0,MAPS['neighborhood'].h), p:R(0,6)});
   time = 0; pops = 0; resetDay();
   towerState = 0; towerT = 0; towerZoom = 0; towerClimbHold = 0; vistaText = 0; vistaSeen = false;
@@ -163,7 +169,7 @@ export function update(){
   if(state !== "run") return;
   time += 1/60;
   tickClock();
-  document.getElementById("scorebox").textContent = `Day ${getGameDay()} · ${getClockDisplay()} · \u{1F366} ${pops}`;
+  document.getElementById("scorebox").textContent = `Day ${getGameDay()} · ${getClockDisplay()} · $${getMoney()} · \u{1F366} ${pops}`;
   if(missionT > 0){ missionT--; document.getElementById("mission").style.opacity = missionT > 60 ? 1 : missionT/60; }
 
   /* player */
@@ -171,6 +177,7 @@ export function update(){
   let my = (keys.KeyS||keys.ArrowDown?1:0)  - (keys.KeyW||keys.ArrowUp?1:0);
   if(joy && (Math.abs(joy.dx) > 7 || Math.abs(joy.dy) > 7)){ mx = joy.dx/46; my = joy.dy/46; }
   if(towerState > 0){ mx = 0; my = 0; } // freeze movement while climbing or at top
+  if(activityHoldT > 0){ mx = 0; my = 0; } // freeze while performing an activity
   const ml = Math.hypot(mx, my);
   if(ml > 1){ mx/=ml; my/=ml; }
   const sprinting = (keys.ShiftLeft||keys.ShiftRight||sprintHeld) && player.stam > 0 && ml > 0;
@@ -209,6 +216,7 @@ export function update(){
     // Interactable proximity
     interactText = null;
     let _nearBed = false;
+    let _nearActivity = false;
     for(const ia of INTERIORS[insideMap].interactables){
       if(Math.hypot(player.x-ia.x, player.y-ia.y) < ia.r + 14){
         if(ia.sleep && !isFading()){
@@ -221,6 +229,29 @@ export function update(){
           } else {
             sleepHoldT = Math.max(0, sleepHoldT - 2);
             interactText = {txt:"Your bed", txt2:"Hold ↑ to sleep"};
+          }
+          break;
+        }
+        if(ia.activity && !isFading()){
+          _nearActivity = true;
+          const act = ia.activity;
+          if(!act.claimed){
+            const upHeld = keys.KeyW || keys.ArrowUp;
+            if(upHeld){
+              activityHoldT++;
+              const pct = Math.min(100, Math.floor(activityHoldT / act.durationFrames * 100));
+              interactText = {txt:ia.txt, txt2:`${act.label} · ${pct}%`};
+              if(activityHoldT >= act.durationFrames){
+                act.claimed = true; earnMoney(act.pay); advanceClock(act.timeMinutes);
+                sfx.pickup(); interactText = {txt:ia.txt, txt2:act.doneTxt}; activityHoldT = 0;
+              }
+            } else {
+              activityHoldT = Math.max(0, activityHoldT - 2);
+              interactText = {txt:ia.txt, txt2:ia.txt2};
+            }
+          } else {
+            activityHoldT = 0;
+            interactText = {txt:ia.txt, txt2:'Done for today!'};
           }
           break;
         }
@@ -242,6 +273,7 @@ export function update(){
       }
     }
     if(!_nearBed) sleepHoldT = 0;
+    if(!_nearActivity) activityHoldT = 0;
     // Interior NPCs face player
     for(const n of interiorNPCs){
       n.anim += .04;
@@ -373,6 +405,36 @@ export function update(){
       }
     }
   }
+
+  /* overworld activities (chores, jobs) */
+  let _nearOActivity = false;
+  for(const ia of activities){
+    if(Math.hypot(player.x-ia.x, player.y-ia.y) < ia.r + 14){
+      _nearOActivity = true;
+      if(ia.activity && !isFading()){
+        const act = ia.activity;
+        if(!act.claimed){
+          if(keys.KeyW || keys.ArrowUp){
+            activityHoldT++;
+            const pct = Math.min(100, Math.floor(activityHoldT / act.durationFrames * 100));
+            interactText = {txt:ia.txt, txt2:`${act.label} · ${pct}%`};
+            if(activityHoldT >= act.durationFrames){
+              act.claimed = true; earnMoney(act.pay); advanceClock(act.timeMinutes);
+              sfx.pickup(); interactText = {txt:ia.txt, txt2:act.doneTxt}; activityHoldT = 0;
+            }
+          } else {
+            activityHoldT = Math.max(0, activityHoldT - 2);
+            interactText = {txt:ia.txt, txt2:ia.txt2};
+          }
+        } else {
+          activityHoldT = 0;
+          interactText = {txt:ia.txt, txt2:'Done for today!'};
+        }
+      }
+      break;
+    }
+  }
+  if(!_nearOActivity) activityHoldT = 0;
 
   /* ── section boundary transitions ──────────────────────────── */
   if(!isFading() && doorCooldown <= 0 && insideMap === null){
@@ -704,5 +766,6 @@ export { keys, player, dog };
 export const getState = () => state;
 export const getInsideMap = () => insideMap;
 export const getDoorCooldown = () => doorCooldown;
+export const getActivityHoldT = () => activityHoldT;
 export function startRun(){ start(); }
 export function stepFrame(){ update(); draw(); }

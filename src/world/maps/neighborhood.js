@@ -312,4 +312,11 @@ export const neighborhood = {
     [1958, 116],   // N-S road north stretch
     [1958, 1116],  // N-S road mid
   ],
+
+  // ── Overworld activities (chores, jobs) — same pattern as interior ────
+  activities: [
+    { x:1295, y:2400, r:60, txt:"Lawn Mower", txt2:"Hold ↑ to mow lawn",
+      activity:{ key:'chore_mow', durationFrames:600, timeMinutes:30, pay:15,
+                 doneTxt:"Lawn mowed! +$15", label:"Mowing lawn" } },
+  ],
 };
