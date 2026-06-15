@@ -703,5 +703,6 @@ if(typeof window !== "undefined"){
 export { keys, player, dog };
 export const getState = () => state;
 export const getInsideMap = () => insideMap;
+export const getDoorCooldown = () => doorCooldown;
 export function startRun(){ start(); }
 export function stepFrame(){ update(); draw(); }

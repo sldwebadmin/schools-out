@@ -49,7 +49,7 @@ global.AudioContext = undefined;
 global.webkitAudioContext = undefined;
 
 /* ── Import game (stubs must be set up first) ────────────────────── */
-const { init, startRun, stepFrame, keys, player, dog, getState, getInsideMap } =
+const { init, startRun, stepFrame, keys, player, dog, getState, getInsideMap, getDoorCooldown } =
   await import('../src/main.js');
 
 /* ── Simulate gameplay ───────────────────────────────────────────── */
@@ -94,12 +94,13 @@ try {
 
   // Phase 5: interior enter/exit cycle
   // House door at local (1363,2304,64,22). Stand just south of it.
-  startRun(); // reset to overworld
+  startRun(); // reset to overworld — resets doorCooldown to 0
   player.x = 1395; player.y = 2331;
   keys.KeyW = false; keys.KeyS = false; keys.KeyA = false; keys.KeyD = false;
-  // Step enough frames for fade-out (30) + swap + fade-in (30) = 60 frames
-  for(let i = 0; i < 90; i++) stepFrame();
-  if(getInsideMap() !== 'house') errors.push(`Expected insideMap='house' after entering door, got '${getInsideMap()}'`);
+  console.log(`Phase 5 start: state=${getState()}, doorCooldown=${getDoorCooldown()}`);
+  // Step enough frames for: any leftover doorCooldown (max 120) + fade-out (30) + fade-in (30)
+  for(let i = 0; i < 200; i++) stepFrame();
+  if(getInsideMap() !== 'house') errors.push(`Expected insideMap='house' after entering door, got '${getInsideMap()}' (doorCooldown was ${getDoorCooldown()})`);
   else console.log('Interior enter: OK (house)');
 
   // Walk south to exit (exit at y=330, player spawns at y=200 inside house 360px tall)
