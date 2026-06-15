@@ -93,9 +93,9 @@ try {
   console.log('Gameplay simulation: 5400 frames completed without runtime error');
 
   // Phase 5: interior enter/exit cycle
-  // House door at local (1363,2304,64,22). Stand just south of it.
+  // House door at local (270,2200,64,22). Stand just south of it.
   startRun(); // reset to overworld — resets doorCooldown to 0
-  player.x = 1395; player.y = 2331;
+  player.x = 302; player.y = 2228;
   keys.KeyW = false; keys.KeyS = false; keys.KeyA = false; keys.KeyD = false;
   console.log(`Phase 5 start: state=${getState()}, doorCooldown=${getDoorCooldown()}`);
   // Step enough frames for: any leftover doorCooldown (max 120) + fade-out (30) + fade-in (30)
@@ -135,7 +135,7 @@ try {
 
   // In-game: enter house, complete Wash Dishes chore (240 frames), verify +$5
   startRun();
-  player.x = 1395; player.y = 2331;
+  player.x = 302; player.y = 2228;
   keys.KeyW = false; keys.KeyS = false; keys.KeyA = false; keys.KeyD = false;
   for(let i = 0; i < 200; i++) stepFrame(); // enter house (fade 30 + margin 140)
   if(getInsideMap() !== 'house'){

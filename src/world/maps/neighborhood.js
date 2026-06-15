@@ -1,34 +1,51 @@
-// Maple Court (Neighborhood) — standalone section map.
+// Maple Court (Neighborhood) — Phase N1: Streets skeleton.
 // All coordinates are local (origin 0,0 = world 2560,3584).
 // Section size: 2560 × 2560 px.
+//
+// Road grid:
+//   Maple Ave (main N-S, 128px): x=1200..1328  — splits TL/BL from TR/BR
+//   Court Dr  (main E-W, 128px): y=1200..1328  — splits TL/TR from BL/BR
+//   Elm Ct    (sec  N-S,  64px): x=560..624    — secondary in TL / BL quadrants
+//   Ridge Rd  (sec  N-S, 140px): x=1888..2028  — world road, secondary in TR / BR
+//   Oak Ave   (sec  E-W, 140px): y=896..1036   — world road HY1, secondary in TL/TR
+//   Birch Ave (sec  E-W, 140px): y=1664..1804  — world road HY2, secondary in BL/BR
 
 import { CHUNK_W, DAY_SEED } from '../../engine/constants.js';
 import { mulberry32, bakeCanvas } from '../../engine/utils.js';
 import { ZONE } from '../tiledata.js';
 import { drawTiledGround, drawAutotileEdges } from '../tilerender.js';
 
-// ── Road constants in local coords ────────────────────────────────────────
-const LRX  = 1888; // main N-S road left edge (world 4448)
-const LHY1 =  896; // horizontal road 1 top  (world 4480)
-const LHY2 = 1664; // horizontal road 2 top  (world 5248)
+// ── Road constants (local coords) ─────────────────────────────────────────
+const MNS_X=1200, MNS_W=128;  // Maple Ave N-S
+const MEW_Y=1200, MEW_W=128;  // Court Dr E-W
+const ELM_X= 560, ELM_W= 64;  // Elm Ct
+const RID_X=1888, RID_W=140;  // Ridge Rd (world road)
+const OAK_Y= 896, OAK_W=140;  // Oak Ave  (world road HY1)
+const BIR_Y=1664, BIR_W=140;  // Birch Ave (world road HY2)
+const SW=28;                   // sidewalk strip width
 
-// ── Section zone function ─────────────────────────────────────────────────
+// ── Zone function ─────────────────────────────────────────────────────────
 function zoneAt(lx, ly) {
-  if (lx >= 2140 && lx < 2400 && ly >= 116 && ly < 316) return ZONE.COURT;
-  // Main N-S road
-  if (lx >= LRX && lx < LRX + 140 && ly >= 0 && ly < 2560) return ZONE.ROAD;
-  // Horizontal roads
-  if (lx >= 0 && lx < 2560 && ly >= LHY1 && ly < LHY1 + 140) return ZONE.ROAD;
-  if (lx >= 0 && lx < 2560 && ly >= LHY2 && ly < LHY2 + 140) return ZONE.ROAD;
-  // Sidewalks along main road (world 4420-4448 → local 1860-1888; 4588-4616 → 2028-2056)
-  if (lx >= 1860 && lx < LRX      && ly >= 0 && ly < 2304) return ZONE.SIDEWALK;
-  if (lx >= LRX + 140 && lx < 2056 && ly >= 0 && ly < 2304) return ZONE.SIDEWALK;
-  // Sidewalks along HY1
-  if (lx >= 0 && lx < 2560 && ly >= LHY1 - 28 && ly < LHY1) return ZONE.SIDEWALK;
-  if (lx >= 0 && lx < 2560 && ly >= LHY1 + 140 && ly < LHY1 + 168) return ZONE.SIDEWALK;
-  // Sidewalks along HY2
-  if (lx >= 0 && lx < 2560 && ly >= LHY2 - 28 && ly < LHY2) return ZONE.SIDEWALK;
-  if (lx >= 0 && lx < 2560 && ly >= LHY2 + 140 && ly < LHY2 + 168) return ZONE.SIDEWALK;
+  // Roads first — they win over sidewalks at intersections
+  if (lx >= MNS_X && lx < MNS_X+MNS_W) return ZONE.ROAD;
+  if (ly >= MEW_Y && ly < MEW_Y+MEW_W) return ZONE.ROAD;
+  if (lx >= ELM_X && lx < ELM_X+ELM_W) return ZONE.ROAD;
+  if (lx >= RID_X && lx < RID_X+RID_W) return ZONE.ROAD;
+  if (ly >= OAK_Y && ly < OAK_Y+OAK_W) return ZONE.ROAD;
+  if (ly >= BIR_Y && ly < BIR_Y+BIR_W) return ZONE.ROAD;
+  // Sidewalks
+  if (lx >= MNS_X-SW && lx < MNS_X)              return ZONE.SIDEWALK;
+  if (lx >= MNS_X+MNS_W && lx < MNS_X+MNS_W+SW) return ZONE.SIDEWALK;
+  if (ly >= MEW_Y-SW && ly < MEW_Y)               return ZONE.SIDEWALK;
+  if (ly >= MEW_Y+MEW_W && ly < MEW_Y+MEW_W+SW)  return ZONE.SIDEWALK;
+  if (lx >= ELM_X-SW && lx < ELM_X)              return ZONE.SIDEWALK;
+  if (lx >= ELM_X+ELM_W && lx < ELM_X+ELM_W+SW) return ZONE.SIDEWALK;
+  if (lx >= RID_X-SW && lx < RID_X)              return ZONE.SIDEWALK;
+  if (lx >= RID_X+RID_W && lx < RID_X+RID_W+SW) return ZONE.SIDEWALK;
+  if (ly >= OAK_Y-SW && ly < OAK_Y)              return ZONE.SIDEWALK;
+  if (ly >= OAK_Y+OAK_W && ly < OAK_Y+OAK_W+SW) return ZONE.SIDEWALK;
+  if (ly >= BIR_Y-SW && ly < BIR_Y)              return ZONE.SIDEWALK;
+  if (ly >= BIR_Y+BIR_W && ly < BIR_Y+BIR_W+SW) return ZONE.SIDEWALK;
   return ZONE.LAWN;
 }
 
@@ -62,41 +79,56 @@ function bakeInto(g, lx0, ly0) {
 
   drawTiledGround(g, lx0, ly0, zoneAt);
 
-  // Basketball court lines (local 2144,120)
-  g.strokeStyle="#cfc6e8"; g.lineWidth=4;
-  g.strokeRect(2144, 120, 252, 192);
-  g.strokeRect(2230, 120, 80, 70);
-  g.beginPath(); g.arc(2270, 190, 40, 0, Math.PI); g.stroke();
-
-  // Sidewalks
-  sidewalk(1860, 0, 28, 2560);          // west side of N-S road
-  sidewalk(LRX + 140, 0, 28, 2560);     // east side of N-S road
-  sidewalk(0, LHY1 - 28, 2560, 28);     // north of HY1
-  sidewalk(0, LHY1 + 140, 2560, 28);    // south of HY1
-  sidewalk(0, LHY2 - 28, 2560, 28);     // north of HY2
-  sidewalk(0, LHY2 + 140, 2560, 28);    // south of HY2
+  // Sidewalks drawn first; roads then overdraw the cross-over areas
+  sidewalk(MNS_X-SW, 0, SW, 2560);
+  sidewalk(MNS_X+MNS_W, 0, SW, 2560);
+  sidewalk(0, MEW_Y-SW, 2560, SW);
+  sidewalk(0, MEW_Y+MEW_W, 2560, SW);
+  sidewalk(ELM_X-SW, 0, SW, 2560);
+  sidewalk(ELM_X+ELM_W, 0, SW, 2560);
+  sidewalk(RID_X-SW, 0, SW, 2560);
+  sidewalk(RID_X+RID_W, 0, SW, 2560);
+  sidewalk(0, OAK_Y-SW, 2560, SW);
+  sidewalk(0, OAK_Y+OAK_W, 2560, SW);
+  sidewalk(0, BIR_Y-SW, 2560, SW);
+  sidewalk(0, BIR_Y+BIR_W, 2560, SW);
 
   // Roads
-  road(LRX, 0, 140, 2560);
-  road(0, LHY1, 2560, 140);
-  road(0, LHY2, 2560, 140);
+  road(MNS_X, 0, MNS_W, 2560);
+  road(0, MEW_Y, 2560, MEW_W);
+  road(ELM_X, 0, ELM_W, 2560);
+  road(RID_X, 0, RID_W, 2560);
+  road(0, OAK_Y, 2560, OAK_W);
+  road(0, BIR_Y, 2560, BIR_W);
 
-  // Road center dashes — N-S road (pattern from world y=2116 step 64; local offset = (2116-3584)%64 = 4)
+  // Center-line dashes
   g.fillStyle="#8d80b8";
-  for(let y = 4; y < 2560; y += 64) g.fillRect(LRX + 66, y, 8, 28);
-  // Road center dashes — HY1 and HY2 (pattern from world x=2584 step 64; local offset = (2584-2560)%64 = 24)
-  for(let x = 24; x < 2560; x += 64) g.fillRect(x, LHY1 + 66, 28, 8);
-  for(let x = 24; x < 2560; x += 64) g.fillRect(x, LHY2 + 66, 28, 8);
+  for(let y=4; y<2560; y+=64) g.fillRect(MNS_X+60, y, 8, 28);   // Maple Ave
+  for(let x=4; x<2560; x+=64) g.fillRect(x, MEW_Y+60, 28, 8);   // Court Dr
+  for(let y=4; y<2560; y+=64) g.fillRect(ELM_X+28, y, 8, 28);   // Elm Ct
+  for(let y=4; y<2560; y+=64) g.fillRect(RID_X+66, y, 8, 28);   // Ridge Rd
+  for(let x=4; x<2560; x+=64) g.fillRect(x, OAK_Y+66, 28, 8);  // Oak Ave
+  for(let x=4; x<2560; x+=64) g.fillRect(x, BIR_Y+66, 28, 8);  // Birch Ave
 
-  // Crosswalk marks at N-S road × HY1 and × HY2
+  // Crosswalk marks at major intersections
   g.fillStyle="#cfc6e8";
-  for(const iy of [LHY1, LHY2])
-    for(let i = 0; i < 6; i++) g.fillRect(LRX + 10 + i * 22, iy + 40, 12, 60);
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, OAK_Y+40, 12, 60);  // Maple×Oak
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, MEW_Y+40, 12, 60);  // Maple×Court
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, BIR_Y+40, 12, 60);  // Maple×Birch
+  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14,  OAK_Y+40,  8, 60);  // Elm×Oak
+  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14,  MEW_Y+40,  8, 60);  // Elm×Court
+  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14,  BIR_Y+40,  8, 60);  // Elm×Birch
 
-  // Manhole covers on N-S road (world 4518,4200 / 4518,5000 / 4518,5600 → local)
-  for(const [mx,my] of [[1958,616],[1958,1416],[1958,2016]]){
-    g.fillStyle="#2e294a"; g.beginPath(); g.arc(mx, my, 11, 0, 7); g.fill();
-    g.strokeStyle="#55517a"; g.lineWidth=3; g.beginPath(); g.arc(mx, my, 7, 0, 7); g.stroke();
+  // Manhole covers at mid-block positions
+  for(const [mx,my] of [
+    [MNS_X+64,  400], [MNS_X+64, 1600], [MNS_X+64, 2200],
+    [ELM_X+32,  700], [ELM_X+32, 1800],
+    [RID_X+70,  500], [RID_X+70, 1500], [RID_X+70, 2100],
+    [200, OAK_Y+70], [900, OAK_Y+70], [1600, OAK_Y+70],
+    [200, BIR_Y+70], [900, BIR_Y+70], [1600, BIR_Y+70],
+  ]){
+    g.fillStyle="#2e294a"; g.beginPath(); g.arc(mx,my,11,0,7); g.fill();
+    g.strokeStyle="#55517a"; g.lineWidth=3; g.beginPath(); g.arc(mx,my,7,0,7); g.stroke();
   }
   g.lineWidth=1;
 
@@ -105,27 +137,22 @@ function bakeInto(g, lx0, ly0) {
 
 // ── Minimap bake ──────────────────────────────────────────────────────────
 function minimapBake() {
-  const MSC_L = 150 / 2560;
+  const SC = 150 / 2560;
   const [c, g] = bakeCanvas(150, 150);
   const B = (x,y,w,h,col) => {
-    g.fillStyle = col;
-    g.fillRect(x*MSC_L, y*MSC_L, Math.max(1,w*MSC_L), Math.max(1,h*MSC_L));
+    g.fillStyle=col;
+    g.fillRect(x*SC, y*SC, Math.max(1,w*SC), Math.max(1,h*SC));
   };
-  g.fillStyle = '#3f5d44'; g.fillRect(0, 0, 150, 150);  // lawn base
-  // Roads
-  B(LRX,  0,    140, 2560, '#2a2345');
-  B(0,    LHY1, 2560, 140, '#2a2345');
-  B(0,    LHY2, 2560, 140, '#2a2345');
-  // Houses
-  B(215,  276,  250, 170, '#5a4a6a');   // house 1 (purple)
-  B(2215, 276,  250, 170, '#4a5880');   // house 2 (blue)
-  B(500,  1116, 260, 180, '#7a5f30');   // house 4 / doghouse yard
-  B(2185, 1086, 250, 150, '#3f5b4e');   // house 3 (green)
-  B(1295, 2146, 250, 170, '#2a7a75');   // house 5 / player (teal)
-  B(215,  1846, 250, 130, '#46325a');   // house 6
-  B(2215, 1846, 250, 130, '#6a4550');   // house 7
-  // Court
-  B(2140, 116, 260, 200, '#3a3760');
+  g.fillStyle='#3f5d44'; g.fillRect(0,0,150,150);
+  B(MNS_X, 0,    MNS_W, 2560, '#2a2345');
+  B(0,    MEW_Y, 2560,  MEW_W, '#2a2345');
+  B(ELM_X, 0,   ELM_W, 2560,  '#2a2345');
+  B(RID_X, 0,   RID_W, 2560,  '#2a2345');
+  B(0,    OAK_Y, 2560,  OAK_W, '#2a2345');
+  B(0,    BIR_Y, 2560,  BIR_W, '#2a2345');
+  // Player spawn marker
+  g.fillStyle='#ffc44d';
+  g.beginPath(); g.arc(592*SC, 1550*SC, 3, 0, Math.PI*2); g.fill();
   return c;
 }
 
@@ -141,144 +168,33 @@ export const neighborhood = {
   bakeInto,
   minimapBake,
 
-  // ── Walls ──────────────────────────────────────────────────────────────
-  walls: [
-    // House 1 yard (purple)
-    {x:80,  y:56,  w:215, h:10,  type:"fence", hop:true},
-    {x:385, y:56,  w:215, h:10,  type:"fence", hop:true},
-    {x:80,  y:526, w:520, h:10,  type:"fence", hop:true},
-    {x:80,  y:56,  w:10,  h:216, type:"fence", hop:true},
-    {x:80,  y:348, w:10,  h:188, type:"fence", hop:true},
-    {x:590, y:56,  w:10,  h:216, type:"fence", hop:true},
-    {x:590, y:348, w:10,  h:188, type:"fence", hop:true},
-    {x:215, y:276, w:250, h:170, type:"house", hue:"#6b4a76", trim:"#ffe9c2"},
-    {x:116, y:426, w:20,  h:20,  type:"tree"},
-    {x:473, y:406, w:24,  h:24,  type:"trash", hop:true},
-    {x:393, y:50,  w:10,  h:12,  type:"mailbox", ghost:true},
+  walls: [],
 
-    // House 2 yard (blue)
-    {x:2080, y:56,  w:215, h:10,  type:"fence", hop:true},
-    {x:2385, y:56,  w:215, h:10,  type:"fence", hop:true},
-    {x:2080, y:526, w:520, h:10,  type:"fence", hop:true},
-    {x:2080, y:56,  w:10,  h:216, type:"fence", hop:true},
-    {x:2080, y:348, w:10,  h:188, type:"fence", hop:true},
-    {x:2530, y:56,  w:10,  h:216, type:"fence", hop:true},
-    {x:2530, y:348, w:10,  h:188, type:"fence", hop:true},
-    {x:2215, y:276, w:250, h:170, type:"house", hue:"#5c6f9e", trim:"#ffe9c2"},
-    {x:2160, y:416, w:8,   h:8,   type:"hoop", ghost:true},
-    {x:2473, y:406, w:24,  h:24,  type:"trash", hop:true},
-    {x:2393, y:50,  w:10,  h:12,  type:"mailbox", ghost:true},
+  canopies: [],
 
-    // House 3 yard (green)
-    {x:2080, y:1076, w:185, h:10,  type:"fence", hop:true},
-    {x:2355, y:1076, w:185, h:10,  type:"fence", hop:true},
-    {x:2080, y:1306, w:460, h:10,  type:"fence", hop:true},
-    {x:2080, y:1076, w:10,  h:108, type:"fence", hop:true},
-    {x:2080, y:1260, w:10,  h:56,  type:"fence", hop:true},
-    {x:2530, y:1076, w:10,  h:108, type:"fence", hop:true},
-    {x:2530, y:1260, w:10,  h:56,  type:"fence", hop:true},
-    {x:2185, y:1086, w:250, h:150, type:"house", hue:"#4f6b5e", trim:"#ffe9c2"},
-    {x:2443, y:1196, w:24,  h:24,  type:"trash", hop:true},
-    {x:2363, y:1070, w:10,  h:12,  type:"mailbox", ghost:true},
-
-    // House 4 yard (doghouse)
-    {x:340,  y:1056, w:300, h:10,  type:"fence", hop:true},
-    {x:740,  y:1056, w:360, h:10,  type:"fence", hop:true},
-    {x:340,  y:1356, w:760, h:10,  type:"fence", hop:true},
-    {x:340,  y:1056, w:10,  h:140, type:"fence", hop:true},
-    {x:340,  y:1272, w:10,  h:84,  type:"fence", hop:true},
-    {x:1100, y:1056, w:10,  h:140, type:"fence", hop:true},
-    {x:1100, y:1272, w:10,  h:84,  type:"fence", hop:true},
-    {x:500,  y:1116, w:260, h:180, type:"house", hue:"#8a6f3e", trim:"#ffe9c2"},
-    {x:920,  y:1176, w:60,  h:50,  type:"doghouse", ghost:true},
-    {x:380,  y:1066, w:12,  h:14,  type:"sign", ghost:true, txt:"BEWARE OF DOG", txt2:"(his name is Biscuit)"},
-    {x:1160, y:1096, w:20,  h:20,  type:"tree"},
-    {x:1260, y:1236, w:20,  h:20,  type:"tree"},
-
-    // House 5 yard (player)
-    {x:1200, y:2046, w:170, h:10,  type:"fence", hop:true},
-    {x:1460, y:2046, w:180, h:10,  type:"fence", hop:true},
-    {x:1200, y:2396, w:440, h:10,  type:"fence", hop:true},
-    {x:1200, y:2046, w:10,  h:162, type:"fence", hop:true},
-    {x:1200, y:2284, w:10,  h:122, type:"fence", hop:true},
-    {x:1630, y:2046, w:10,  h:162, type:"fence", hop:true},
-    {x:1630, y:2284, w:10,  h:122, type:"fence", hop:true},
-    {x:1295, y:2146, w:250, h:170, type:"house", player:true, hue:"#2e8f8a", trim:"#ffc44d"},
-    {x:1180, y:2296, w:20,  h:20,  type:"tree"},
-    {x:1553, y:2276, w:24,  h:24,  type:"trash", hop:true},
-    {x:1468, y:2040, w:10,  h:12,  type:"mailbox", ghost:true},
-
-    // House 6 yard (south-west)
-    {x:80,  y:1816, w:215, h:10,  type:"fence", hop:true},
-    {x:385, y:1816, w:215, h:10,  type:"fence", hop:true},
-    {x:80,  y:2018, w:520, h:10,  type:"fence", hop:true},
-    {x:80,  y:1816, w:10,  h:85,  type:"fence", hop:true},
-    {x:80,  y:1977, w:10,  h:29,  type:"fence", hop:true},
-    {x:590, y:1816, w:10,  h:85,  type:"fence", hop:true},
-    {x:590, y:1977, w:10,  h:29,  type:"fence", hop:true},
-    {x:215, y:1846, w:250, h:130, type:"house", hue:"#56406f", trim:"#ffe9c2"},
-    {x:116, y:1956, w:20,  h:20,  type:"tree"},
-    {x:473, y:1926, w:24,  h:24,  type:"trash", hop:true},
-    {x:393, y:1810, w:10,  h:12,  type:"mailbox", ghost:true},
-
-    // House 7 yard (south-east)
-    {x:2080, y:1816, w:215, h:10,  type:"fence", hop:true},
-    {x:2385, y:1816, w:215, h:10,  type:"fence", hop:true},
-    {x:2080, y:2018, w:520, h:10,  type:"fence", hop:true},
-    {x:2080, y:1816, w:10,  h:85,  type:"fence", hop:true},
-    {x:2080, y:1977, w:10,  h:29,  type:"fence", hop:true},
-    {x:2530, y:1816, w:10,  h:85,  type:"fence", hop:true},
-    {x:2530, y:1977, w:10,  h:29,  type:"fence", hop:true},
-    {x:2215, y:1846, w:250, h:130, type:"house", hue:"#7a5560", trim:"#ffe9c2"},
-    {x:2473, y:1926, w:24,  h:24,  type:"trash", hop:true},
-    {x:2393, y:1810, w:10,  h:12,  type:"mailbox", ghost:true},
-
-    // Scattered trees
-    {x:20,   y:516,  w:20, h:20, type:"tree"},
-    {x:2500, y:541,  w:20, h:20, type:"tree"},
-    {x:20,   y:1916, w:20, h:20, type:"tree"},
-    {x:2510, y:1416, w:20, h:20, type:"tree"},
-  ],
-
-  // ── Canopies ──────────────────────────────────────────────────────────
-  canopies: [
-    {x:126,  y:430,  r:52},
-    {x:1170, y:1100, r:56},
-    {x:1270, y:1240, r:50},
-    {x:1190, y:2300, r:52},
-    {x:30,   y:520,  r:52},
-    {x:2510, y:545,  r:54},
-    {x:30,   y:1920, r:54},
-    {x:2520, y:1420, r:52},
-    {x:126,  y:1960, r:52},
-  ],
-
-  // ── Lamps ─────────────────────────────────────────────────────────────
   lamps: [
-    {x:1858, y:116},
-    {x:2058, y:516},
-    {x:1858, y:876},
-    {x:2058, y:876},
-    {x:1858, y:1046},
-    {x:2058, y:1316},
-    {x:1858, y:1644},
-    {x:2058, y:1644},
-    {x:1858, y:1811},
-    {x:2058, y:2116},
+    {x:1196, y: 892},  // Maple × Oak NW
+    {x:1332, y: 892},  // Maple × Oak NE
+    {x:1196, y:1196},  // Maple × Court NW
+    {x:1332, y:1196},  // Maple × Court NE
+    {x:1196, y:1660},  // Maple × Birch NW
+    {x:1332, y:1660},  // Maple × Birch NE
+    {x: 556, y: 892},  // Elm × Oak W
+    {x: 628, y: 892},  // Elm × Oak E
+    {x: 556, y:1196},  // Elm × Court W
+    {x: 628, y:1196},  // Elm × Court E
+    {x: 556, y:1660},  // Elm × Birch
+    {x:1884, y: 892},  // Ridge × Oak
+    {x:1884, y:1196},  // Ridge × Court
+    {x:1884, y:1660},  // Ridge × Birch
   ],
 
-  // ── Interior doors ────────────────────────────────────────────────────
   doors: [
-    {x:1363, y:2304, w:64, h:22, target:"house", spawnX:240, spawnY:200,
-     worldReturn:{x:1395, y:2348}},
-    {x:148,  y:434,  w:50, h:22, target:null, txt:"Nobody home right now."},
-    {x:2283, y:434,  w:50, h:22, target:null, txt:"Back in a bit!"},
-    {x:2253, y:1214, w:50, h:22, target:null, txt:"Shh — baby napping."},
-    {x:148,  y:1964, w:50, h:22, target:null, txt:"Ring the bell?"},
-    {x:2283, y:1964, w:50, h:22, target:null, txt:"Gone fishing."},
+    // Player's house placeholder — BL quadrant; house placed in Phase N2
+    {x:270, y:2200, w:64, h:22, target:"house", spawnX:240, spawnY:200,
+     worldReturn:{x:302, y:2244}},
   ],
 
-  // ── Section transitions (all locked — other sections not built yet) ───
   transitions: [
     {x:0,    y:0,    w:2560, h:32,   status:'locked', txt:'Maple Park',            txt2:'Coming soon!'},
     {x:0,    y:2528, w:2560, h:32,   status:'locked', txt:'Great Waterfront Lake', txt2:'Coming soon!'},
@@ -286,68 +202,16 @@ export const neighborhood = {
     {x:0,    y:0,    w:32,   h:2560, status:'locked', txt:'Whispering Woods',      txt2:'Coming soon!'},
   ],
 
-  // ── NPCs (waypoints in local coords) ──────────────────────────────────
-  npcs: [
-    // Walk patrol across house-1/2 yards
-    {kind:"walk", variant:0, wps:[[140,516],[940,516],[940,816],[140,816]],
-     spd:1.0, pp:false, shirt:"#7fb069", hair:"#2b2118"},
-    // N-S bike patrol on main road (clipped to neighborhood)
-    {kind:"bike", variant:0, wps:[[1958,10],[1958,2116]],
-     spd:2.6, pp:true, shirt:"#ff8f57", hair:"#2b2118"},
-    // E-W bike patrol along HY1
-    {kind:"bike", variant:1, wps:[[0,966],[2560,966]],
-     spd:2.3, pp:true, shirt:"#57b8ff", hair:"#4a3322"},
-    // Stationary court kid
-    {kind:"kid", variant:2, wps:[[2160,216]], spd:0,
-     shirt:"#a78bdb", hair:"#1b1430",
-     lines:["First to 11 wins.","Hoops, then popsicles?"]},
-    // ── Named friend NPCs ─────────────────────────────────────────────
-    {kind:"kid", variant:1, wps:[[620,1600]], spd:0,
-     shirt:"#ff9ac1", hair:"#1b1430",
-     name:"Jordan", friendKey:"jordan",
-     friendLines:[
-       ["Hey, I've seen you around.","The woods go on forever south."],
-       ["Oh hey! Glad you came back.","This neighborhood is full of secrets."],
-       ["There's a secret path — I'll show you soon!","Meet me here tomorrow?"],
-       ["Ready for another adventure?","You're my favorite person to explore with!"],
-       ["Best friends! This summer is ours.","Nobody knows these streets like us."],
-     ]},
-    {kind:"kid", variant:2, wps:[[1700,500]], spd:0,
-     shirt:"#a78bdb", hair:"#4a3322",
-     name:"Priya", friendKey:"priya",
-     friendLines:[
-       ["I'm working on something. Creative stuff.","Don't mind me."],
-       ["Oh, you again. Pull up some grass.","I'm sketching the water tower from here."],
-       ["I saved you a spot! Check out this sketch.","You have good taste in hang-out spots."],
-       ["I made something for you — just a doodle.","Let's find something cool to draw today."],
-       ["Best artist-friend duo in Maple Court!","I put you in my sketchbook."],
-     ]},
-    {kind:"kid", variant:0, wps:[[2200,1700]], spd:0,
-     shirt:"#57b8ff", hair:"#2b2118",
-     name:"Marcus", friendKey:"marcus",
-     friendLines:[
-       ["You play any sports?","First to ten wins."],
-       ["Hey! You should try the e-bike track.","I'm out here every afternoon."],
-       ["Rematch — I'll go easier on you.","You've got good endurance, actually."],
-       ["Training partner! Finally.","I think we could race together."],
-       ["Best summer team-up ever.","Gold medals, you and me."],
-     ]},
-  ],
+  npcs: [],
 
-  // ── Pickup spawn spots (local coords) ────────────────────────────────
   pickupSpots: [
-    [440,  616],   // open lawn west of doghouse yard
-    [2140, 316],   // basketball court area
-    [1140, 1516],  // mid-lawn
-    [2440, 1116],  // east lawn
-    [1958, 116],   // N-S road north stretch
-    [1958, 1116],  // N-S road mid
+    [300,  420],  // TL quad lawn
+    [1600, 420],  // TR quad lawn
+    [300, 1900],  // BL quad lawn
+    [2200, 2000], // BR quad lawn
+    [1264, 550],  // Maple Ave mid-north
+    [592,  750],  // Elm Ct mid-north
   ],
 
-  // ── Overworld activities (chores, jobs) — same pattern as interior ────
-  activities: [
-    { x:1295, y:2400, r:60, txt:"Lawn Mower", txt2:"Hold ↑ to mow lawn",
-      activity:{ key:'chore_mow', durationFrames:600, timeMinutes:30, pay:15,
-                 doneTxt:"Lawn mowed! +$15", label:"Mowing lawn" } },
-  ],
+  activities: [],
 };
