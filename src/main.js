@@ -2,7 +2,7 @@ import { VW, VH, PX, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
 import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay, getClockMinutes } from './engine/clock.js';
 import { earnMoney, getMoney, snapshotDayBalance, forfeitDayEarnings } from './engine/money.js';
 import { grantFriendship, canInteract, getFriendLevelName } from './engine/friends.js';
-import { grantTrust, penalizeTrust, getTrustLevelName, getCurfewMinutes } from './engine/trust.js';
+import { grantTrust, penalizeTrust, getTrust, getTrustLevelName, getCurfewMinutes } from './engine/trust.js';
 import { MAPS } from './world/maps/index.js';
 import { buildSheets } from './render/sheet.js';
 import { buildTileset } from './world/tilecache.js';
@@ -23,7 +23,7 @@ import { makeNPCs } from './entities/npcs.js';
 import { POP_SPOTS, BIKE_SPOTS } from './entities/pickups.js';
 import { player, resetPlayer } from './entities/player.js';
 import { dog, resetDog } from './entities/dog.js';
-import { show, setDogLabel } from './ui/hud.js';
+import { show } from './ui/hud.js';
 import { showEndScreen } from './ui/overlays.js';
 import { initDraw, inView, snap } from './render/draw.js';
 import { drawWall } from './render/props.js';
@@ -219,6 +219,8 @@ export function update(){
   time += 1/60;
   tickClock();
   document.getElementById("scorebox").textContent = `Day ${getGameDay()} · ${getClockDisplay()} · $${getMoney()} · \u{1F366} ${pops}`;
+  document.getElementById("trustfill").style.transform = `scaleX(${getTrust() / 100})`;
+  document.getElementById("trustlevel").textContent = getTrustLevelName();
   if(missionT > 0){ missionT--; document.getElementById("mission").style.opacity = missionT > 60 ? 1 : missionT/60; }
 
   /* player */
@@ -294,7 +296,7 @@ export function update(){
                 act.claimed = true; earnMoney(act.pay); grantTrust(2);
                 sfx.pickup();
                 interactText = {txt:ia.txt, txt2:`${act.doneTxt}  · Trust: ${getTrustLevelName()}`};
-                activityHoldT = 0;
+                activityHoldT = 0; doorCooldown = 90;
               }
             } else {
               activityHoldT = Math.max(0, activityHoldT - 2);
@@ -302,7 +304,7 @@ export function update(){
             }
           } else {
             activityHoldT = 0;
-            interactText = {txt:ia.txt, txt2:'Done for today!'};
+            if(!doorCooldown) interactText = {txt:ia.txt, txt2:'Done for today!'};
           }
           break;
         }
@@ -353,11 +355,10 @@ export function update(){
   /* Biscuit */
   const ddRaw = Math.hypot(dog.x-player.x, dog.y-player.y);
   if(dog.mode === "sleep"){
-    if(ddRaw < 240){ dog.mode = "alert"; dog.alert = 44; dog.spotted = true; sfx.alert(); sfx.bark();
-      setDogLabel("Biscuit · !!!"); }
+    if(ddRaw < 240){ dog.mode = "alert"; dog.alert = 44; dog.spotted = true; sfx.alert(); sfx.bark(); }
   } else if(dog.mode === "alert"){
     dog.alert--;
-    if(dog.alert <= 0){ dog.mode = "chase"; setDogLabel("Biscuit"); }
+    if(dog.alert <= 0){ dog.mode = "chase"; }
   } else {
     let dSpd = 3.1 + Math.min(1.5, time * .012);
     if(dog.wet > 0){ dSpd *= 0.65; dog.wet--; } // sprinkler slows dog too
@@ -483,7 +484,7 @@ export function update(){
               act.claimed = true; earnMoney(act.pay); grantTrust(2);
               sfx.pickup();
               interactText = {txt:ia.txt, txt2:`${act.doneTxt}  · Trust: ${getTrustLevelName()}`};
-              activityHoldT = 0;
+              activityHoldT = 0; doorCooldown = 90;
             }
           } else {
             activityHoldT = Math.max(0, activityHoldT - 2);
@@ -491,7 +492,7 @@ export function update(){
           }
         } else {
           activityHoldT = 0;
-          interactText = {txt:ia.txt, txt2:'Done for today!'};
+          if(!doorCooldown) interactText = {txt:ia.txt, txt2:'Done for today!'};
         }
       }
       break;
