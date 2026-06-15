@@ -189,6 +189,39 @@ try {
 
   console.log(`Friendship: test_npc=${getFriendship('test_npc')} (${getFriendLevelName('test_npc')}), talk ok1=${ok1} ok2=${ok2} ok3=${ok3}`);
 
+  // Phase 9: trust system — levels, curfew threshold, chore gain, penalty, forfeit
+  const { grantTrust, penalizeTrust, getTrust, getTrustLevelName, getCurfewMinutes } =
+    await import('../src/engine/trust.js');
+  const { snapshotDayBalance, forfeitDayEarnings } = await import('../src/engine/money.js');
+
+  // Starts at 15 → Wary
+  if(getTrustLevelName() !== 'Wary')
+    errors.push(`Trust init: expected Wary, got ${getTrustLevelName()}`);
+
+  // +15 → 30 → Trusted; curfew extends to 1470
+  grantTrust(15);
+  if(getTrustLevelName() !== 'Trusted')
+    errors.push(`Trust +15: expected Trusted, got ${getTrustLevelName()}`);
+  if(getCurfewMinutes() !== 1470)
+    errors.push(`Curfew at Trusted: expected 1470, got ${getCurfewMinutes()}`);
+
+  // Penalty -10 → 20 → Wary; curfew back to 1440
+  penalizeTrust(10);
+  if(getTrustLevelName() !== 'Wary')
+    errors.push(`Trust -10: expected Wary, got ${getTrustLevelName()}`);
+  if(getCurfewMinutes() !== 1440)
+    errors.push(`Curfew at Wary: expected 1440, got ${getCurfewMinutes()}`);
+
+  // Forfeit: earn money then restore to snapshot
+  snapshotDayBalance();
+  const balSnap = getMoney();
+  earnMoney(30);
+  forfeitDayEarnings();
+  if(getMoney() !== balSnap)
+    errors.push(`Forfeit: expected ${balSnap}, got ${getMoney()}`);
+
+  console.log(`Trust: ${getTrustLevelName()} (${getTrust()}pts), curfew=${getCurfewMinutes()}`);
+
 } catch(e) {
   errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));
 }
@@ -212,7 +245,7 @@ try {
 /* ── Module file structure ───────────────────────────────────────── */
 const required = [
   'index.html', 'styles.css', 'src/main.js',
-  'src/engine/constants.js', 'src/engine/utils.js', 'src/engine/clock.js', 'src/engine/money.js', 'src/engine/friends.js',
+  'src/engine/constants.js', 'src/engine/utils.js', 'src/engine/clock.js', 'src/engine/money.js', 'src/engine/friends.js', 'src/engine/trust.js',
   'src/engine/collision.js', 'src/engine/input.js',
   'src/engine/spatialgrid.js', 'src/engine/transition.js',
   'src/audio/synth.js',

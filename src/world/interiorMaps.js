@@ -143,7 +143,24 @@ export const INTERIORS = {
         activity:{ key:'chore_tidy',   durationFrames:360, timeMinutes:15, pay:8,
                    doneTxt:"Room tidied! +$8", label:"Tidying up" } },
     ],
-    npcs: [],
+    npcs: [
+      { kind:"kid", variant:1, wps:[[340,240]], spd:0, shirt:"#7fb069", hair:"#3a2818",
+        name:"Mom", friendKey:"mom",
+        friendLines:[
+          ["Don't forget your chores, honey.","Dinner's at six."],
+          ["Good to see you up and about!","Let me know if you need anything."],
+          ["You've been so helpful lately.","I noticed — thank you."],
+          ["I'm really proud of you this summer.","You can stay out a bit later tonight."],
+        ] },
+      { kind:"kid", variant:0, wps:[[380,280]], spd:0, shirt:"#6f8eb0", hair:"#1b1430",
+        name:"Dad", friendKey:"dad",
+        friendLines:[
+          ["Hey, kiddo. Staying out of trouble?","The lawn could use some attention."],
+          ["Good morning! Sleep well?","There's always something to do around here."],
+          ["Nice work on the chores.","Keep it up and I'll raise your allowance."],
+          ["That's the kid I raised.","You've earned some extra freedom this summer."],
+        ] },
+    ],
   },
   mart: {
     name: "Maple Mart",

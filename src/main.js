@@ -1,7 +1,8 @@
 import { VW, VH, PX, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
-import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay } from './engine/clock.js';
-import { earnMoney, getMoney } from './engine/money.js';
+import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay, getClockMinutes } from './engine/clock.js';
+import { earnMoney, getMoney, snapshotDayBalance, forfeitDayEarnings } from './engine/money.js';
 import { grantFriendship, canInteract, getFriendLevelName } from './engine/friends.js';
+import { grantTrust, penalizeTrust, getTrustLevelName, getCurfewMinutes } from './engine/trust.js';
 import { MAPS } from './world/maps/index.js';
 import { buildSheets } from './render/sheet.js';
 import { buildTileset } from './world/tilecache.js';
@@ -41,6 +42,8 @@ let joy = null, sprintHeld = false;
 let sleepHoldT = 0;
 let activities = [];
 let activityHoldT = 0;
+let curfewBroken = false; // true after curfew fires this day (prevents double-trigger)
+let curfewMsg = null;     // non-null while the curfew-consequence overlay is showing
 // Water tower climb state
 let towerState = 0, towerT = 0, towerZoom = 0, towerClimbHold = 0;
 let vistaSeen = false, vistaText = 0;
@@ -67,10 +70,11 @@ function tryHop(){
   player.hop = 18; player.hopCd = 42; sfx.hop();
 }
 
-// Talk to the nearest friend NPC within range. Returns true if handled (suppress hop).
+// Talk to the nearest friend NPC within range (overworld or interior). Returns true if handled.
 function talkToNearestFriend(){
-  if(state !== "run" || isFading() || insideMap !== null) return false;
-  for(const n of npcs){
+  if(state !== "run" || isFading() || curfewMsg) return false;
+  const candidates = insideMap !== null ? interiorNPCs : npcs;
+  for(const n of candidates){
     if(!n.friendKey) continue;
     if(Math.hypot(player.x - n.x, player.y - n.y) < 80){
       const granted = grantFriendship(n.friendKey, 'talk', 3, getGameDay());
@@ -109,6 +113,8 @@ function exitInterior(ex){
 
 function doSleep(){
   clockSleep();
+  snapshotDayBalance(); // snapshot balance at start of new day for potential curfew forfeit
+  curfewBroken = false;
   sleepHoldT = 0; activityHoldT = 0;
   resetChores();
   for(const ia of activities) if(ia.activity) ia.activity.claimed = false;
@@ -119,6 +125,27 @@ function doSleep(){
   buildGrid(walls); setBounds(MAPS[currentSection].w, MAPS[currentSection].h);
   regionName = `Day ${getGameDay()} · Good morning!`;
   bannerT = 300;
+}
+
+function doCurfewBreak(){
+  penalizeTrust(10);
+  forfeitDayEarnings();
+  clockSleep();
+  snapshotDayBalance();
+  curfewBroken = false;
+  sleepHoldT = 0; activityHoldT = 0;
+  resetChores();
+  for(const ia of activities) if(ia.activity) ia.activity.claimed = false;
+  const ex = INTERIORS['house'].exits[0];
+  player.x = ex.worldTarget.x; player.y = ex.worldTarget.y;
+  insideMap = null; interiorNPCs = []; interactText = null; doorCooldown = 60;
+  buildGrid(walls); setBounds(MAPS[currentSection].w, MAPS[currentSection].h);
+  curfewMsg = {
+    line1: "You missed curfew.",
+    line2: '"We were waiting up for you." — Mom',
+    line3: `Trust lost · Day's earnings forfeited · Day ${getGameDay()} begins`,
+    line4: "[Space] Continue",
+  };
 }
 
 function loadSection(key) {
@@ -155,7 +182,7 @@ function resetRun(){
   resetPlayer();
   resetDog();
   loadSection('neighborhood');
-  parts = []; flies = []; sleepHoldT = 0; activityHoldT = 0;
+  parts = []; flies = []; sleepHoldT = 0; activityHoldT = 0; curfewBroken = false; curfewMsg = null;
   for(let i=0;i<70;i++) flies.push({x:R(0,MAPS['neighborhood'].w), y:R(0,MAPS['neighborhood'].h), p:R(0,6)});
   time = 0; pops = 0; resetDay();
   towerState = 0; towerT = 0; towerZoom = 0; towerClimbHold = 0; vistaText = 0; vistaSeen = false;
@@ -165,6 +192,7 @@ function start(){
   audio(); startMusic();
   if(state === "run") return;
   resetRun();
+  snapshotDayBalance(); // capture opening balance so curfew forfeit knows what to restore
   state = "run"; missionT = 280;
   show("title",false); show("gameover",false); show("win",false); show("hud",true);
 }
@@ -187,6 +215,7 @@ export function update(){
   frame++;
   stepFade();
   if(state !== "run") return;
+  if(curfewMsg) return; // hold on curfew-consequence screen; Space dismisses
   time += 1/60;
   tickClock();
   document.getElementById("scorebox").textContent = `Day ${getGameDay()} · ${getClockDisplay()} · $${getMoney()} · \u{1F366} ${pops}`;
@@ -223,7 +252,7 @@ export function update(){
 
   /* ── INTERIOR MODE ─────────────────────────────────────── */
   if(insideMap !== null){
-    if(doorCooldown > 0) doorCooldown--;
+    if(doorCooldown > 0){ doorCooldown--; if(!doorCooldown) interactText = null; }
     // Check exits
     if(!isFading() && doorCooldown <= 0){
       for(const ex of INTERIORS[insideMap].exits){
@@ -234,7 +263,7 @@ export function update(){
       }
     }
     // Interactable proximity
-    interactText = null;
+    if(!doorCooldown) interactText = null;
     let _nearBed = false;
     let _nearActivity = false;
     for(const ia of INTERIORS[insideMap].interactables){
@@ -262,8 +291,10 @@ export function update(){
               const pct = Math.min(100, Math.floor(activityHoldT / act.durationFrames * 100));
               interactText = {txt:ia.txt, txt2:`${act.label} · ${pct}%`};
               if(activityHoldT >= act.durationFrames){
-                act.claimed = true; earnMoney(act.pay);
-                sfx.pickup(); interactText = {txt:ia.txt, txt2:act.doneTxt}; activityHoldT = 0;
+                act.claimed = true; earnMoney(act.pay); grantTrust(2);
+                sfx.pickup();
+                interactText = {txt:ia.txt, txt2:`${act.doneTxt}  · Trust: ${getTrustLevelName()}`};
+                activityHoldT = 0;
               }
             } else {
               activityHoldT = Math.max(0, activityHoldT - 2);
@@ -294,17 +325,27 @@ export function update(){
     }
     if(!_nearBed) sleepHoldT = 0;
     if(!_nearActivity) activityHoldT = 0;
-    // Interior NPCs face player
+    // Interior NPCs face player; friend NPCs show proximity prompt
     for(const n of interiorNPCs){
       n.anim += .04;
       n.face = player.x >= n.x ? 1 : -1;
       if(USE_SHEETS) n.dir = player.x >= n.x ? 2 : 1;
+      if(n.friendKey && !doorCooldown && !interactText && Math.hypot(player.x - n.x, player.y - n.y) < 80){
+        const ok = canInteract(n.friendKey, getGameDay());
+        interactText = { txt: n.name, txt2: `${getFriendLevelName(n.friendKey)}  ·  ${ok ? '[Space] Chat' : 'Already caught up today!'}` };
+      }
     }
     return; // skip overworld logic
   }
 
   /* region banner — name set by loadSection; count down the timer */
   if(bannerT > 0) bannerT--;
+
+  /* curfew check — fires once when the clock passes curfew time while outside */
+  if(!curfewBroken && !isFading() && getClockMinutes() >= getCurfewMinutes()){
+    curfewBroken = true;
+    startFade(doCurfewBreak);
+  }
 
   /* goal check */
   if((player.x-GOAL.x)**2 + (player.y-GOAL.y)**2 < GOAL.r*GOAL.r) return endRun(true);
@@ -439,8 +480,10 @@ export function update(){
             const pct = Math.min(100, Math.floor(activityHoldT / act.durationFrames * 100));
             interactText = {txt:ia.txt, txt2:`${act.label} · ${pct}%`};
             if(activityHoldT >= act.durationFrames){
-              act.claimed = true; earnMoney(act.pay);
-              sfx.pickup(); interactText = {txt:ia.txt, txt2:act.doneTxt}; activityHoldT = 0;
+              act.claimed = true; earnMoney(act.pay); grantTrust(2);
+              sfx.pickup();
+              interactText = {txt:ia.txt, txt2:`${act.doneTxt}  · Trust: ${getTrustLevelName()}`};
+              activityHoldT = 0;
             }
           } else {
             activityHoldT = Math.max(0, activityHoldT - 2);
@@ -574,6 +617,7 @@ export function draw(){
     for(const e of ients) e.f();
 
     drawDuskWash();
+    drawSpeechBubbles(interiorNPCs, player, frame);
     if(interactText) _drawInteractOverlay(interactText);
     drawFade(ctx, VW, VH);
     return;
@@ -720,6 +764,25 @@ export function draw(){
   }
 
   drawFade(ctx, VW, VH);
+  if(curfewMsg) _drawCurfewOverlay();
+}
+
+function _drawCurfewOverlay(){
+  const cx = VW / 2, cy = VH / 2;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.94)';
+  ctx.fillRect(0, 0, VW, VH);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ff6b57'; ctx.font = 'bold 16px monospace';
+  ctx.fillText(curfewMsg.line1, cx, cy - 48);
+  ctx.fillStyle = '#ffe9c2'; ctx.font = '12px monospace';
+  ctx.fillText(curfewMsg.line2, cx, cy - 18);
+  ctx.fillStyle = '#ffc44d'; ctx.font = '11px monospace';
+  ctx.fillText(curfewMsg.line3, cx, cy + 14);
+  ctx.fillStyle = 'rgba(255,233,194,0.55)'; ctx.font = '11px monospace';
+  ctx.fillText(curfewMsg.line4, cx, cy + 50);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.restore();
 }
 
 function _drawInteractOverlay(ia){
@@ -760,7 +823,10 @@ export function init(){
   buildMap(); resetRun();
 
   setupKeyboard(
-    () => { if(state === "title") start(); else if(state === "run") talkToNearestFriend() || tryHop(); },
+    () => {
+      if(curfewMsg){ curfewMsg = null; return; }
+      if(state === "title") start(); else if(state === "run") talkToNearestFriend() || tryHop();
+    },
     toggleMusic
   );
 
@@ -779,7 +845,7 @@ export function init(){
   const endJoy = e => { if(joy && e.pointerId === joy.id) joy = null; };
   cv.addEventListener("pointerup", endJoy); cv.addEventListener("pointercancel", endJoy);
 
-  document.getElementById("btnHop").addEventListener("pointerdown", e => { e.preventDefault(); if(state==="run") talkToNearestFriend() || tryHop(); else start(); });
+  document.getElementById("btnHop").addEventListener("pointerdown", e => { e.preventDefault(); if(curfewMsg){ curfewMsg = null; return; } if(state==="run") talkToNearestFriend() || tryHop(); else start(); });
   const bS = document.getElementById("btnSprint");
   bS.addEventListener("pointerdown", e => { e.preventDefault(); sprintHeld = true; bS.classList.add("on"); });
   const sOff = () => { sprintHeld = false; bS.classList.remove("on"); };
