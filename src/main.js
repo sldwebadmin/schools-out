@@ -163,6 +163,7 @@ export function update(){
   if(state !== "run") return;
   time += 1/60;
   tickClock();
+  document.getElementById("scorebox").textContent = `Day ${getGameDay()} · ${getClockDisplay()} · \u{1F366} ${pops}`;
   if(missionT > 0){ missionT--; document.getElementById("mission").style.opacity = missionT > 60 ? 1 : missionT/60; }
 
   /* player */
@@ -426,7 +427,6 @@ export function update(){
     if(towerT >= 60){ towerState = 0; towerZoom = 0; }
   }
 
-  document.getElementById("scorebox").textContent = `Day ${getGameDay()} · ${getClockDisplay()} · \u{1F366} ${pops}`;
   document.getElementById("dogfill").style.transform = "scaleX(" +
     (dog.mode === "sleep" ? 0 : clamp(1 - (ddRaw-26)/520, 0, 1)) + ")";
   document.getElementById("stamfill").style.transform = "scaleX(" + (player.stam/100) + ")";
