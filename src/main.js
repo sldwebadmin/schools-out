@@ -1,5 +1,5 @@
 import { VW, VH, PX, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
-import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay, advanceClock } from './engine/clock.js';
+import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay } from './engine/clock.js';
 import { earnMoney, getMoney } from './engine/money.js';
 import { MAPS } from './world/maps/index.js';
 import { buildSheets } from './render/sheet.js';
@@ -242,7 +242,7 @@ export function update(){
               const pct = Math.min(100, Math.floor(activityHoldT / act.durationFrames * 100));
               interactText = {txt:ia.txt, txt2:`${act.label} · ${pct}%`};
               if(activityHoldT >= act.durationFrames){
-                act.claimed = true; earnMoney(act.pay); advanceClock(act.timeMinutes);
+                act.claimed = true; earnMoney(act.pay);
                 sfx.pickup(); interactText = {txt:ia.txt, txt2:act.doneTxt}; activityHoldT = 0;
               }
             } else {
@@ -419,7 +419,7 @@ export function update(){
             const pct = Math.min(100, Math.floor(activityHoldT / act.durationFrames * 100));
             interactText = {txt:ia.txt, txt2:`${act.label} · ${pct}%`};
             if(activityHoldT >= act.durationFrames){
-              act.claimed = true; earnMoney(act.pay); advanceClock(act.timeMinutes);
+              act.claimed = true; earnMoney(act.pay);
               sfx.pickup(); interactText = {txt:ia.txt, txt2:act.doneTxt}; activityHoldT = 0;
             }
           } else {
