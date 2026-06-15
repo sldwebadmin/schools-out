@@ -1,6 +1,7 @@
 import { VW, VH, PX, GOAL, DAY_NUM, USE_SHEETS } from './engine/constants.js';
 import { tickClock, getClockDisplay, getGameDay, sleep as clockSleep, resetDay } from './engine/clock.js';
 import { earnMoney, getMoney } from './engine/money.js';
+import { addFriendship, getFriendLevel, friendStars } from './engine/friends.js';
 import { MAPS } from './world/maps/index.js';
 import { buildSheets } from './render/sheet.js';
 import { buildTileset } from './world/tilecache.js';
@@ -435,6 +436,26 @@ export function update(){
     }
   }
   if(!_nearOActivity) activityHoldT = 0;
+
+  /* friend NPC proximity — tick friendship, show star indicator */
+  for(const n of npcs){
+    if(!n.friendKey) continue;
+    const dist = Math.hypot(player.x - n.x, player.y - n.y);
+    if(dist < 80){
+      n._visitT = (n._visitT || 0) + 1;
+      // +1 friendship every 2 real seconds of proximity, up to 5pts per visit
+      if(n._visitT > 0 && n._visitT <= 600 && n._visitT % 120 === 0)
+        addFriendship(n.friendKey, 1);
+      // Show indicator unless mid-activity
+      if(!activityHoldT){
+        const lvl = getFriendLevel(n.friendKey);
+        const lbl = ['Stranger','Acquaintance','Friend!','Good friend!','Best friend!'][lvl];
+        interactText = { txt: n.name, txt2: `${friendStars(n.friendKey)}  ${lbl}` };
+      }
+    } else {
+      n._visitT = 0;
+    }
+  }
 
   /* ── section boundary transitions ──────────────────────────── */
   if(!isFading() && doorCooldown <= 0 && insideMap === null){

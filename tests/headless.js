@@ -152,6 +152,22 @@ try {
     else console.log(`Chore: Wash Dishes done, +$5 (balance: $${getMoney()})`);
   }
 
+  // Phase 8: friendship system — API and level thresholds
+  const { addFriendship, getFriendship, getFriendLevel, friendStars } =
+    await import('../src/engine/friends.js');
+  addFriendship('jordan', 5);
+  if(getFriendship('jordan') !== 5)
+    errors.push(`Friendship: expected 5, got ${getFriendship('jordan')}`);
+  if(getFriendLevel('jordan') !== 1)
+    errors.push(`FriendLevel: expected 1 at 5pts, got ${getFriendLevel('jordan')}`);
+  addFriendship('jordan', 15); // now 20
+  if(getFriendLevel('jordan') !== 2)
+    errors.push(`FriendLevel: expected 2 at 20pts, got ${getFriendLevel('jordan')}`);
+  addFriendship('jordan', 100); // clamps at 100
+  if(getFriendship('jordan') > 100)
+    errors.push(`Friendship: should cap at 100, got ${getFriendship('jordan')}`);
+  console.log(`Friendship: Jordan=${getFriendship('jordan')} ${friendStars('jordan')} (Lv.${getFriendLevel('jordan')})`);
+
 } catch(e) {
   errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));
 }
@@ -175,7 +191,7 @@ try {
 /* ── Module file structure ───────────────────────────────────────── */
 const required = [
   'index.html', 'styles.css', 'src/main.js',
-  'src/engine/constants.js', 'src/engine/utils.js', 'src/engine/clock.js', 'src/engine/money.js',
+  'src/engine/constants.js', 'src/engine/utils.js', 'src/engine/clock.js', 'src/engine/money.js', 'src/engine/friends.js',
   'src/engine/collision.js', 'src/engine/input.js',
   'src/engine/spatialgrid.js', 'src/engine/transition.js',
   'src/audio/synth.js',

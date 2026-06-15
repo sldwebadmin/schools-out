@@ -301,6 +301,37 @@ export const neighborhood = {
     {kind:"kid", variant:2, wps:[[2160,216]], spd:0,
      shirt:"#a78bdb", hair:"#1b1430",
      lines:["First to 11 wins.","Hoops, then popsicles?"]},
+    // ── Named friend NPCs ─────────────────────────────────────────────
+    {kind:"kid", variant:1, wps:[[620,1600]], spd:0,
+     shirt:"#ff9ac1", hair:"#1b1430",
+     name:"Jordan", friendKey:"jordan",
+     friendLines:[
+       ["Hey, I've seen you around.","The woods go on forever south."],
+       ["Oh hey! Glad you came back.","This neighborhood is full of secrets."],
+       ["There's a secret path — I'll show you soon!","Meet me here tomorrow?"],
+       ["Ready for another adventure?","You're my favorite person to explore with!"],
+       ["Best friends! This summer is ours.","Nobody knows these streets like us."],
+     ]},
+    {kind:"kid", variant:2, wps:[[1700,500]], spd:0,
+     shirt:"#a78bdb", hair:"#4a3322",
+     name:"Priya", friendKey:"priya",
+     friendLines:[
+       ["I'm working on something. Creative stuff.","Don't mind me."],
+       ["Oh, you again. Pull up some grass.","I'm sketching the water tower from here."],
+       ["I saved you a spot! Check out this sketch.","You have good taste in hang-out spots."],
+       ["I made something for you — just a doodle.","Let's find something cool to draw today."],
+       ["Best artist-friend duo in Maple Court!","I put you in my sketchbook."],
+     ]},
+    {kind:"kid", variant:0, wps:[[2200,1700]], spd:0,
+     shirt:"#57b8ff", hair:"#2b2118",
+     name:"Marcus", friendKey:"marcus",
+     friendLines:[
+       ["You play any sports?","First to ten wins."],
+       ["Hey! You should try the e-bike track.","I'm out here every afternoon."],
+       ["Rematch — I'll go easier on you.","You've got good endurance, actually."],
+       ["Training partner! Finally.","I think we could race together."],
+       ["Best summer team-up ever.","Gold medals, you and me."],
+     ]},
   ],
 
   // ── Pickup spawn spots (local coords) ────────────────────────────────

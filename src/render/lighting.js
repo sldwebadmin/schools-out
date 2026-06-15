@@ -1,6 +1,7 @@
 import { VW, VH, PX, GOAL } from '../engine/constants.js';
 import { snap, rectW, inView, getCtx, getCam } from './draw.js';
 import { mini, MSC } from '../world/minimap.js';
+import { getFriendLevel } from '../engine/friends.js';
 
 export function drawShadows(walls){
   const ctx = getCtx(), cam = getCam();
@@ -62,10 +63,17 @@ export function drawDuskWash(){
 export function drawSpeechBubbles(npcs, player, frame){
   const ctx = getCtx(), cam = getCam();
   for(const n of npcs){
-    if(n.kind !== "kid" || !n.lines) continue;
+    if(n.kind !== "kid") continue;
     const d = Math.hypot(n.x-player.x, n.y-player.y);
     if(d > 150 || !inView(n.x-120, n.y-90, 240, 100)) continue;
-    const line = n.lines[Math.floor(frame/260) % n.lines.length];
+    // Friend NPCs use level-appropriate dialogue; others use static lines
+    let lines = n.lines;
+    if(n.friendKey && n.friendLines){
+      const lvl = getFriendLevel(n.friendKey);
+      lines = n.friendLines[Math.min(lvl, n.friendLines.length - 1)];
+    }
+    if(!lines) continue;
+    const line = lines[Math.floor(frame/260) % lines.length];
     const bw = line.length*6.6 + 18, bx = Math.max(6, Math.min(n.x-cam.x - bw/2, VW-bw-6)), by = n.y-cam.y - 74;
     ctx.fillStyle = "rgba(20,14,40,.85)"; ctx.fillRect(bx, by, bw, 24);
     ctx.strokeStyle = "rgba(255,196,77,.8)"; ctx.lineWidth = 2; ctx.strokeRect(bx, by, bw, 24);
