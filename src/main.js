@@ -31,6 +31,7 @@ import { drawPlayer, drawNPC, drawDog, drawPop, drawBikePk } from './render/spri
 import { drawShadows, drawCanopies, drawFireflies, drawLamps, drawDuskWash, drawSpeechBubbles, drawMinimap, drawBiscuitArrow } from './render/lighting.js';
 
 let cv, ctx;
+let elScorebox, elTrustFill, elTrustLevel, elMission;
 const cam = { x:0, y:0 };
 let state = "title", frame = 0, time = 0, pops = 0, best = 0, missionT = 0;
 let pickups = [], parts = [], npcs = [], flies = [];
@@ -218,10 +219,10 @@ export function update(){
   if(curfewMsg) return; // hold on curfew-consequence screen; Space dismisses
   time += 1/60;
   tickClock();
-  document.getElementById("scorebox").textContent = `Day ${getGameDay()} · ${getClockDisplay()} · $${getMoney()} · \u{1F366} ${pops}`;
-  document.getElementById("trustfill").style.transform = `scaleX(${getTrust() / 100})`;
-  document.getElementById("trustlevel").textContent = getTrustLevelName();
-  if(missionT > 0){ missionT--; document.getElementById("mission").style.opacity = missionT > 60 ? 1 : missionT/60; }
+  if(elScorebox)   elScorebox.textContent = `Day ${getGameDay()} · ${getClockDisplay()} · $${getMoney()} · \u{1F366} ${pops}`;
+  if(elTrustFill)  elTrustFill.style.transform = `scaleX(${getTrust() / 100})`;
+  if(elTrustLevel) elTrustLevel.textContent = getTrustLevelName();
+  if(missionT > 0){ missionT--; if(elMission) elMission.style.opacity = missionT > 60 ? 1 : missionT/60; }
 
   /* player */
   let mx = (keys.KeyD||keys.ArrowRight?1:0) - (keys.KeyA||keys.ArrowLeft?1:0);
@@ -812,6 +813,11 @@ export function init(){
   ctx.imageSmoothingEnabled = false;
   fit();
   addEventListener("resize", fit);
+
+  elScorebox   = document.getElementById("scorebox");
+  elTrustFill  = document.getElementById("trustfill");
+  elTrustLevel = document.getElementById("trustlevel");
+  elMission    = document.getElementById("mission");
 
   document.getElementById("daylabel").textContent = "Day " + getGameDay() + " · Maple Court";
 
