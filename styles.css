@@ -20,8 +20,8 @@ h1 span{display:block;color:var(--cream);font-size:.4em;letter-spacing:.45em;mar
 .meter{width:clamp(110px,20vw,190px);}
 .meter .bar{height:8px;background:rgba(255,233,194,.18);margin-top:5px;position:relative;overflow:hidden;}
 .meter .fill{position:absolute;inset:0;transform-origin:left;}
-#dogfill{background:linear-gradient(90deg,var(--teal),var(--gold),var(--coral));}
-#stamfill{background:linear-gradient(90deg,#7fd8cf,var(--teal));}
+#trustfill{background:linear-gradient(90deg,var(--coral),var(--gold));}
+.trust-level{font-size:clamp(9px,1.3vw,11px);letter-spacing:.14em;color:var(--teal);margin-top:4px;text-transform:uppercase;}
 #mission{position:absolute;top:18%;left:0;right:0;text-align:center;pointer-events:none;opacity:0;transition:opacity .4s;}
 #mission .m1{font-size:clamp(16px,3.4vw,30px);font-weight:900;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;text-shadow:0 3px 0 rgba(27,20,48,.9),0 0 20px rgba(255,196,77,.5);}
 #mission .m2{margin-top:6px;font-size:clamp(10px,1.7vw,14px);letter-spacing:.3em;color:var(--cream);text-transform:uppercase;}
