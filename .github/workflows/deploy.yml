@@ -9,6 +9,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 # Opt into Node.js 24 runner now — Node.js 20 is removed from Actions on 2026-09-16
 env:
@@ -43,10 +44,13 @@ jobs:
       - run: npm run test:browser
 
       - name: Delete stale github-pages artifact (guards against re-run duplicates)
-        uses: actions/delete-artifact@v4
-        with:
-          name: github-pages
-        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | select(.name == "github-pages") | .id' \
+          | xargs -I{} gh api --method DELETE \
+            "repos/${{ github.repository }}/actions/artifacts/{}" || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
