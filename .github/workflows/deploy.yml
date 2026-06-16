@@ -16,7 +16,7 @@ env:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -41,6 +41,12 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+
+      - name: Delete stale github-pages artifact (guards against re-run duplicates)
+        uses: actions/delete-artifact@v4
+        with:
+          name: github-pages
+        continue-on-error: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
