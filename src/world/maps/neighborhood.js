@@ -1,5 +1,5 @@
-// Maple Court (Neighborhood) — sketch-based starter neighborhood.
-// Local coords: 0,0 = top-left of this section.
+// Maple Court (Neighborhood) — Phase N1: Streets skeleton.
+// All coordinates are local (origin 0,0 = world 2560,3584).
 // Section size: 2560 × 2560 px.
 //
 // Road layout:
@@ -29,6 +29,7 @@ const OAK_Y= 896, OAK_W=140;  // Oak Ave E-W   (left + right, 4-way at Maple)
 const BIR_Y=1664, BIR_W=140;  // Birch Ave E-W (left side only)
 const SW=28;                   // sidewalk strip width
 
+// ── Zone function ─────────────────────────────────────────────────────────
 function zoneAt(lx, ly) {
   // Full-height N-S roads (always win)
   if (lx >= MNS_X && lx < MNS_X+MNS_W) return ZONE.ROAD;
@@ -63,137 +64,34 @@ function zoneAt(lx, ly) {
   return ZONE.LAWN;
 }
 
-// ── Drawing helpers ────────────────────────────────────────────────────
+// ── Ground bake function ──────────────────────────────────────────────────
 function bakeInto(g, lx0, ly0) {
   const rnd = mulberry32(DAY_SEED ^ ((lx0 * 997 + ly0 * 1009) >>> 0));
 
-  function tex(rx0, ry0, rx1, ry1, n, c1, c2, dw, dh) {
-    const ix0 = Math.max(lx0, rx0), ix1 = Math.min(lx0 + CHUNK_W, rx1);
-    const iy0 = Math.max(ly0, ry0), iy1 = Math.min(ly0 + CHUNK_W, ry1);
-    if (ix0 >= ix1 || iy0 >= iy1) return;
-
-    const iw = ix1 - ix0, ih = iy1 - iy0;
-    for (let i = 0; i < n; i++) {
-      g.fillStyle = rnd() < .5 ? c1 : c2;
-      g.fillRect(ix0 + (rnd() * iw) | 0, iy0 + (rnd() * ih) | 0, dw, dh);
+  function tex(rx0,ry0,rx1,ry1, n, c1,c2, dw,dh){
+    const ix0=Math.max(lx0,rx0), ix1=Math.min(lx0+CHUNK_W,rx1);
+    const iy0=Math.max(ly0,ry0), iy1=Math.min(ly0+CHUNK_W,ry1);
+    if(ix0>=ix1||iy0>=iy1) return;
+    const iw=ix1-ix0, ih=iy1-iy0;
+    for(let i=0;i<n;i++){
+      g.fillStyle=rnd()<.5?c1:c2;
+      g.fillRect(ix0+(rnd()*iw)|0, iy0+(rnd()*ih)|0, dw, dh);
     }
   }
-
-  function labelText(txt, cx, cy, size = 18, color = '#fff') {
-    if (!txt) return;
-    g.fillStyle = color;
-    g.font = `${size}px sans-serif`;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-
-    const lines = String(txt).split('\n');
-    const lineH = size + 4;
-
-    for (let i = 0; i < lines.length; i++) {
-      g.fillText(lines[i], cx, cy + (i - (lines.length - 1) / 2) * lineH);
-    }
+  function road(x,y,w,h){
+    g.fillStyle="#46406b"; g.fillRect(x,y,w,h);
+    tex(x,y,x+w,y+h, Math.max(1,(w*h/1400)|0), "#4d4775","#403a62", 5,5);
+    g.fillStyle="#353055";
+    if(w>=h){ g.fillRect(x,y,w,5); g.fillRect(x,y+h-5,w,5); }
+    else     { g.fillRect(x,y,5,h); g.fillRect(x+w-5,y,5,h); }
+  }
+  function sidewalk(x,y,w,h){
+    g.fillStyle="#6a5c91"; g.fillRect(x,y,w,h);
+    g.fillStyle="#5d5083";
+    if(w>=h) for(let sx=x;sx<x+w;sx+=46) g.fillRect(sx,y,3,h);
+    else     for(let sy=y;sy<y+h;sy+=46) g.fillRect(x,sy,w,3);
   }
 
-  function road(x, y, w, h) {
-    g.fillStyle = '#343056';
-    g.fillRect(x, y, w, h);
-
-    tex(
-      x, y, x + w, y + h,
-      Math.max(1, (w * h / 1400) | 0),
-      '#3d3863',
-      '#2d294d',
-      5,
-      5
-    );
-
-    g.fillStyle = '#24203f';
-    if (w >= h) {
-      g.fillRect(x, y, w, 4);
-      g.fillRect(x, y + h - 4, w, 4);
-    } else {
-      g.fillRect(x, y, 4, h);
-      g.fillRect(x + w - 4, y, 4, h);
-    }
-  }
-
-  function sidewalk(x, y, w, h) {
-    g.fillStyle = '#8f8f94';
-    g.fillRect(x, y, w, h);
-
-    g.fillStyle = '#74747a';
-    if (w >= h) {
-      for (let sx = x; sx < x + w; sx += 44) g.fillRect(sx, y, 2, h);
-    } else {
-      for (let sy = y; sy < y + h; sy += 44) g.fillRect(x, sy, w, 2);
-    }
-  }
-
-  function parking(x, y, w, h, label = 'Parking Lot') {
-    g.fillStyle = '#73bdd9';
-    g.fillRect(x, y, w, h);
-
-    g.strokeStyle = '#1b1430';
-    g.lineWidth = 3;
-    g.strokeRect(x, y, w, h);
-
-    const spots = Math.max(2, Math.floor(w / 90));
-    g.strokeStyle = '#19566f';
-    g.lineWidth = 2;
-
-    for (let i = 1; i < spots; i++) {
-      const sx = x + (w / spots) * i;
-      g.beginPath();
-      g.moveTo(sx, y);
-      g.lineTo(sx, y + h - 36);
-      g.stroke();
-    }
-
-    g.fillStyle = '#0d536e';
-    g.fillRect(x, y + h - 38, w, 38);
-    labelText(label, x + w / 2, y + h - 14, 24);
-  }
-
-  function lot(x, y, w, h) {
-    g.fillStyle = '#315c39';
-    g.fillRect(x, y, w, h);
-
-    g.strokeStyle = '#24442b';
-    g.lineWidth = 2;
-    g.strokeRect(x, y, w, h);
-  }
-
-  function building(x, y, w, h, label = '', color = '#7cc6e3') {
-    g.fillStyle = color;
-    g.fillRect(x, y, w, h);
-
-    g.strokeStyle = '#11122a';
-    g.lineWidth = 3;
-    g.strokeRect(x, y, w, h);
-
-    if (label) {
-      labelText(
-        label,
-        x + w / 2,
-        y + h / 2,
-        Math.min(26, Math.max(14, w / 7)),
-        '#11122a'
-      );
-    }
-  }
-
-  function park(x, y, w, h, label) {
-    g.fillStyle = '#8bd34b';
-    g.fillRect(x, y, w, h);
-
-    g.strokeStyle = '#10290f';
-    g.lineWidth = 3;
-    g.strokeRect(x, y, w, h);
-
-    labelText(label, x + w / 2, y + h / 2, 24);
-  }
-
-  // Base tiled ground
   drawTiledGround(g, lx0, ly0, zoneAt);
 
   // ── Sidewalks (drawn before roads so roads overdraw at intersections) ──
@@ -230,26 +128,22 @@ function bakeInto(g, lx0, ly0) {
 
   // ── Center-line dashes ───────────────────────────────────────────────────
   g.fillStyle="#8d80b8";
-  for(let y=4; y<2560; y+=64) g.fillRect(MNS_X+60, y, 8, 28);          // Maple Ave
-  for(let y=4; y<2560; y+=64) g.fillRect(ELM_X+28, y, 8, 28);          // Elm Ct
-  for(let y=4; y<2560; y+=64) g.fillRect(RID_X+66, y, 8, 28);          // Ridge Rd
-  for(let x=4; x<MNS_X; x+=64) g.fillRect(x, OAK_Y+66, 28, 8);        // Oak Ave left
+  for(let y=4; y<2560; y+=64) g.fillRect(MNS_X+60, y, 8, 28);             // Maple Ave
+  for(let y=4; y<2560; y+=64) g.fillRect(ELM_X+28, y, 8, 28);             // Elm Ct
+  for(let y=4; y<2560; y+=64) g.fillRect(RID_X+66, y, 8, 28);             // Ridge Rd
+  for(let x=4; x<MNS_X; x+=64) g.fillRect(x, OAK_Y+66, 28, 8);           // Oak Ave left
   for(let x=MNS_X+MNS_W; x<2560; x+=64) g.fillRect(x, OAK_Y+66, 28, 8); // Oak Ave right
-  for(let x=4; x<MNS_X; x+=64) g.fillRect(x, MEW_Y+60, 28, 8);        // Court Dr
-  for(let x=4; x<MNS_X; x+=64) g.fillRect(x, BIR_Y+66, 28, 8);        // Birch Ave
+  for(let x=4; x<MNS_X; x+=64) g.fillRect(x, MEW_Y+60, 28, 8);           // Court Dr
+  for(let x=4; x<MNS_X; x+=64) g.fillRect(x, BIR_Y+66, 28, 8);           // Birch Ave
 
   // ── Crosswalk marks at intersections ─────────────────────────────────────
   g.fillStyle="#cfc6e8";
-  // Maple × Oak: 4-way (roads on both sides)
-  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, OAK_Y+40, 12, 60);
-  // Maple × Court: T-intersection (Court ends here from left)
-  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, MEW_Y+40, 12, 60);
-  // Maple × Birch: T-intersection (Birch ends here from left)
-  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, BIR_Y+40, 12, 60);
-  // Elm × Oak / Court / Birch (Elm crosses all three left-side E-W roads)
-  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14, OAK_Y+40, 8, 60);
-  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14, MEW_Y+40, 8, 60);
-  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14, BIR_Y+40, 8, 60);
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, OAK_Y+40, 12, 60);  // Maple×Oak
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, MEW_Y+40, 12, 60);  // Maple×Court
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, BIR_Y+40, 12, 60);  // Maple×Birch
+  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14, OAK_Y+40, 8, 60);    // Elm×Oak
+  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14, MEW_Y+40, 8, 60);    // Elm×Court
+  for(let i=0;i<4;i++) g.fillRect(ELM_X+2+i*14, BIR_Y+40, 8, 60);    // Elm×Birch
 
   // ── Manhole covers ───────────────────────────────────────────────────────
   for(const [mx,my] of [
@@ -262,135 +156,71 @@ function bakeInto(g, lx0, ly0) {
     g.fillStyle="#2e294a"; g.beginPath(); g.arc(mx,my,11,0,7); g.fill();
     g.strokeStyle="#55517a"; g.lineWidth=3; g.beginPath(); g.arc(mx,my,7,0,7); g.stroke();
   }
+  g.lineWidth=1;
 
-  // ── Road name labels (temporary debug — high-contrast for layout review) ──
-  // Dark pill background + cream text so names are unmissable against the road.
-  // Repeated every ~500px so each 1024-px chunk sees at least one copy.
+  // ── Road name labels (temporary — high-contrast for layout review) ────────
   function label(text, x, y, vertical) {
     g.save();
     g.font = 'bold 18px sans-serif';
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    if (vertical) {
-      g.translate(x, y);
-      g.rotate(Math.PI / 2);
-    } else {
-      g.translate(x, y);
-    }
+    if (vertical) { g.translate(x, y); g.rotate(Math.PI / 2); }
+    else          { g.translate(x, y); }
     const m = g.measureText(text);
     const pw = m.width + 12, ph = 24;
     g.fillStyle = 'rgba(20,16,40,0.82)';
-    g.fillRect(-pw / 2, -ph / 2, pw, ph);
+    g.fillRect(-pw/2, -ph/2, pw, ph);
     g.fillStyle = '#ffe9c2';
     g.fillText(text, 0, 0);
     g.restore();
   }
-  const OAK_CY = OAK_Y + 70, MEW_CY = MEW_Y + 64, BIR_CY = BIR_Y + 70;
-  const MNS_CX = MNS_X + 64, ELM_CX = ELM_X + 32, RID_CX = RID_X + 70;
-  // E-W labels (horizontal)
-  for (const x of [200, 700])   { label('Oak Ave',   x, OAK_CY, false); }
-  for (const x of [200, 700])   { label('Court Dr',  x, MEW_CY, false); }
-  for (const x of [200, 700])   { label('Birch Ave', x, BIR_CY, false); }
-  for (const x of [1600, 2100]) { label('Oak Ave',   x, OAK_CY, false); }
-  // N-S labels (rotated 90°)
-  for (const y of [300, 900, 1500, 2100]) { label('Maple Ave', MNS_CX, y, true); }
-  for (const y of [200, 700, 1300, 1900]) { label('Elm Ct',    ELM_CX, y, true); }
-  for (const y of [300, 900, 1500, 2100]) { label('Ridge Rd',  RID_CX, y, true); }
+  const OAK_CY = OAK_Y+70, MEW_CY = MEW_Y+64, BIR_CY = BIR_Y+70;
+  const MNS_CX = MNS_X+64, ELM_CX = ELM_X+32, RID_CX = RID_X+70;
+  for(const x of [200, 700])   { label('Oak Ave',   x, OAK_CY, false); }
+  for(const x of [200, 700])   { label('Court Dr',  x, MEW_CY, false); }
+  for(const x of [200, 700])   { label('Birch Ave', x, BIR_CY, false); }
+  for(const x of [1600, 2100]) { label('Oak Ave',   x, OAK_CY, false); }
+  for(const y of [300, 900, 1500, 2100]) { label('Maple Ave', MNS_CX, y, true); }
+  for(const y of [200, 700, 1300, 1900]) { label('Elm Ct',    ELM_CX, y, true); }
+  for(const y of [300, 900, 1500, 2100]) { label('Ridge Rd',  RID_CX, y, true); }
 
   drawAutotileEdges(g, lx0, ly0, zoneAt);
 }
 
-// ── Minimap ────────────────────────────────────────────────────────────
+// ── Minimap bake ──────────────────────────────────────────────────────────
 function minimapBake() {
   const SC = 150 / 2560;
   const [c, g] = bakeCanvas(150, 150);
-
-  const B = (x, y, w, h, col) => {
-    g.fillStyle = col;
-    g.fillRect(x * SC, y * SC, Math.max(1, w * SC), Math.max(1, h * SC));
+  const B = (x,y,w,h,col) => {
+    g.fillStyle=col;
+    g.fillRect(x*SC, y*SC, Math.max(1,w*SC), Math.max(1,h*SC));
   };
   g.fillStyle='#3f5d44'; g.fillRect(0,0,150,150);
-  // Full-height N-S roads
   B(MNS_X, 0, MNS_W, 2560, '#2a2345');
   B(ELM_X, 0, ELM_W, 2560, '#2a2345');
   B(RID_X, 0, RID_W, 2560, '#2a2345');
-  // Left-side E-W roads
-  B(0, OAK_Y, MNS_X,               OAK_W, '#2a2345');
-  B(0, MEW_Y, MNS_X,               MEW_W, '#2a2345');
-  B(0, BIR_Y, MNS_X,               BIR_W, '#2a2345');
-  // Right-side E-W road (Oak Ave)
+  B(0,          OAK_Y, MNS_X,               OAK_W, '#2a2345');
+  B(0,          MEW_Y, MNS_X,               MEW_W, '#2a2345');
+  B(0,          BIR_Y, MNS_X,               BIR_W, '#2a2345');
   B(MNS_X+MNS_W, OAK_Y, 2560-(MNS_X+MNS_W), OAK_W, '#2a2345');
-  // Player spawn marker
   g.fillStyle='#ffc44d';
   g.beginPath(); g.arc(592*SC, 1550*SC, 3, 0, Math.PI*2); g.fill();
   return c;
 }
 
-function makeHouseDoor(x, y, txt = 'Nobody home right now.') {
-  return {
-    x: x + 70,
-    y: y + 190,
-    w: 50,
-    h: 22,
-    worldReturn: { x: x + 95, y: y + 220 },
-    txt,
-  };
-}
-
-// ── Section export ─────────────────────────────────────────────────────
+// ── Section definition ────────────────────────────────────────────────────
 export const neighborhood = {
-  key: 'neighborhood',
-  name: 'Maple Court',
-  w: W,
-  h: H,
+  key:    'neighborhood',
+  name:   'Maple Court',
+  w:      2560,
+  h:      2560,
   status: 'open',
 
   zoneAt,
   bakeInto,
   minimapBake,
 
-  walls: [
-    // Player house — aligned with existing tests.
-    { x:210, y:2020, w:230, h:170, type:'house', txt:'Your House' },
-
-    // Named houses
-    { x:35, y:1310, w:185, h:190, type:'house', txt:'Creepy House' },
-    { x:875, y:1725, w:185, h:190, type:'house', txt:'School Principal' },
-    { x:1415, y:735, w:185, h:210, type:'house', txt:'Chief of Police' },
-    { x:1845, y:1835, w:300, h:205, type:'house', txt:'Mayor’s House' },
-
-    // Parks are non-blocking activity spaces.
-    { x:535, y:100, w:210, h:190, type:'park', ghost:true, noshadow:true, txt:'Park' },
-    { x:535, y:710, w:210, h:175, type:'park', ghost:true, noshadow:true, txt:'Playground' },
-
-    // Upper-right houses
-    ...[1415,1665,1915,2165,2410].map(x => ({
-      x, y:165, w:185, h:205, type:'house'
-    })),
-    ...[1665,1915,2165,2410].map(x => ({
-      x, y:735, w:185, h:210, type:'house'
-    })),
-
-    // Dense left houses
-    ...[245,455,665,875,1085].map(x => ({
-      x, y:1310, w:185, h:190, type:'house'
-    })),
-    ...[35,245,455,665,1085].map(x => ({
-      x, y:1725, w:185, h:190, type:'house'
-    })),
-    ...[35,245,455,665,875,1085].map(x => ({
-      x, y:2135, w:185, h:190, type:'house'
-    })),
-
-    // Open right-side large houses
-    ...[
-      [1400,1325,300,205],
-      [1840,1325,300,205],
-      [2280,1325,300,205],
-      [1410,1835,300,205],
-      [2285,1835,300,205],
-    ].map(([x,y,w,h]) => ({ x, y, w, h, type:'house' })),
-  ],
+  walls: [],
 
   canopies: [],
 
@@ -410,65 +240,26 @@ export const neighborhood = {
   ],
 
   doors: [
-    // Player house interior — keep this coordinate for existing tests.
-    {
-      x:270,
-      y:2200,
-      w:64,
-      h:22,
-      target:'house',
-      spawnX:240,
-      spawnY:200,
-      worldReturn:{ x:302, y:2244 },
-      txt:'Home sweet home.',
-    },
-
-    // Flavor doors
-    makeHouseDoor(35, 1310, 'This house gives you the creeps.'),
-    makeHouseDoor(875, 1725, 'The principal lives here. Better behave.'),
-    makeHouseDoor(1415, 735, 'Chief of Police — maybe don’t cause trouble nearby.'),
-    makeHouseDoor(1845, 1835, 'The mayor’s house. Fancy lawn.'),
-    makeHouseDoor(1085, 2135, 'Your friend is probably outside somewhere.'),
+    {x:270, y:2200, w:64, h:22, target:"house", spawnX:240, spawnY:200,
+     worldReturn:{x:302, y:2244}},
   ],
 
   transitions: [
-    {
-      x:0, y:0, w:2560, h:32,
-      status:'locked',
-      txt:'School District',
-      txt2:'Coming soon!',
-    },
-    {
-      x:0, y:2528, w:2560, h:32,
-      status:'locked',
-      txt:'Lake / Fun Park',
-      txt2:'Coming soon!',
-    },
-    {
-      x:2528, y:0, w:32, h:2560,
-      status:'locked',
-      txt:'Shopping Center',
-      txt2:'Coming soon!',
-    },
-    {
-      x:0, y:0, w:32, h:2560,
-      status:'locked',
-      txt:'Whispering Woods',
-      txt2:'Coming soon!',
-    },
+    {x:0,    y:0,    w:2560, h:32,   status:'locked', txt:'Maple Park',            txt2:'Coming soon!'},
+    {x:0,    y:2528, w:2560, h:32,   status:'locked', txt:'Great Waterfront Lake', txt2:'Coming soon!'},
+    {x:2528, y:0,    w:32,   h:2560, status:'locked', txt:'Maple Mart District',   txt2:'Coming soon!'},
+    {x:0,    y:0,    w:32,   h:2560, status:'locked', txt:'Whispering Woods',      txt2:'Coming soon!'},
   ],
 
   npcs: [],
 
   pickupSpots: [
-    [620, 220],
-    [620, 805],
-    [1450, 460],
-    [2100, 460],
-    [135, 1450],
-    [960, 1850],
-    [302, 2244],
-    [1980, 1940],
+    [300,  420],
+    [1600, 420],
+    [300, 1900],
+    [2200, 2000],
+    [1264, 550],
+    [592,  750],
   ],
 
   activities: [],
