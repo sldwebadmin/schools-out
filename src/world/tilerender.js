@@ -46,42 +46,56 @@ function diagMask(wx, wy, zone, zoneAtFn) {
 
 // ── LAWN autotile ────────────────────────────────────────────────────────
 //
-// ME Exteriors Grass_1 tile assignments (verified by visual inspection):
+// ME Exteriors Grass_1 — only a subset of tiles exist on disk and they are
+// NOT symmetric pairs. Rather than use wrong-looking sprites, we derive all
+// directional variants by transforming the two canonical source sprites:
 //
-//   Outer corners (2 adjacent cardinal sides exposed):
-//     bitmask  3 (N+E connected, SW exposed) → Grass_1_15  ground_lawn_corner_sw
-//     bitmask  6 (E+S connected, NW exposed) → Grass_1_3   ground_lawn_corner_nw
-//     bitmask  9 (N+W connected, SE exposed) → Grass_1_14  ground_lawn_corner_se
-//     bitmask 12 (S+W connected, NE exposed) → Grass_1_4   ground_lawn_corner_ne
+//   ground_lawn_edge_w  (Grass_1_8)  — clean west-facing edge  ← canonical
+//   ground_lawn_edge_s  (Grass_1_18) — clean south-facing edge ← canonical
+//   ground_lawn_corner_ne (Grass_1_4) — NE outer corner        ← canonical
+//   ground_lawn_ic_se   (Grass_1_9)  — SE inner corner         ← canonical
 //
-//   Edge tiles (exactly 1 cardinal side exposed):
-//     bitmask  7 (N+E+S, W exposed)          → Grass_1_8   ground_lawn_edge_w
-//     bitmask 11 (N+E+W, S exposed)          → Grass_1_18  ground_lawn_edge_s
-//     bitmask 13 (N+S+W, E exposed)          → Grass_1_7   ground_lawn_edge_e
-//     bitmask 14 (E+S+W, N exposed)          → Grass_1_19  ground_lawn_edge_n
-//
-//   Inner corners (all NSEW same, exactly 1 diagonal exposed):
-//     NE diagonal → Grass_1_11  ground_lawn_ic_ne
-//     NW diagonal → Grass_1_12  ground_lawn_ic_nw
-//     SE diagonal → Grass_1_9   ground_lawn_ic_se
-//     SW diagonal → Grass_1_10  ground_lawn_ic_sw
-//
-//   Interior fill (all neighbors same):
-//     variant 0–3 → ground_lawn_1 … ground_lawn_4  (Grass_1/2/3/4 flat fills)
-//
-//   All other bitmasks (corridors, isolated, T-junctions with only 1 NSEW
-//   neighbor): fall back to interior flat fill.
+// All other directions are obtained by flipH / flipV on the canonical sprite.
+// This produces a fully symmetric look on all four sides of every lawn patch.
 
 const LAWN_MASK_KEY = {
-   3: 'ground_lawn_corner_sw',
-   6: 'ground_lawn_corner_nw',
-   9: 'ground_lawn_corner_se',
-  12: 'ground_lawn_corner_ne',
-   7: 'ground_lawn_edge_w',
-  11: 'ground_lawn_edge_s',
-  13: 'ground_lawn_edge_e',
-  14: 'ground_lawn_edge_n',
+   3: 'ground_lawn_corner_sw',  // N+E connected, SW exposed
+   6: 'ground_lawn_corner_nw',  // E+S connected, NW exposed
+   9: 'ground_lawn_corner_se',  // N+W connected, SE exposed
+  12: 'ground_lawn_corner_ne',  // S+W connected, NE exposed
+   7: 'ground_lawn_edge_w',     // N+E+S, W exposed
+  11: 'ground_lawn_edge_s',     // N+E+W, S exposed
+  13: 'ground_lawn_edge_e',     // N+S+W, E exposed
+  14: 'ground_lawn_edge_n',     // E+S+W, N exposed
 };
+
+// Derived tiles: {srcKey, flipH, flipV}.
+// When a key appears here, drawLawnTile draws srcKey with the given transform.
+const LAWN_FLIP = {
+  'ground_lawn_edge_e':    { src: 'ground_lawn_edge_w',   flipH: true,  flipV: false },
+  'ground_lawn_edge_n':    { src: 'ground_lawn_edge_s',   flipH: false, flipV: true  },
+  'ground_lawn_corner_nw': { src: 'ground_lawn_corner_ne', flipH: true,  flipV: false },
+  'ground_lawn_corner_se': { src: 'ground_lawn_corner_ne', flipH: false, flipV: true  },
+  'ground_lawn_corner_sw': { src: 'ground_lawn_corner_ne', flipH: true,  flipV: true  },
+  'ground_lawn_ic_sw':     { src: 'ground_lawn_ic_se',    flipH: true,  flipV: false },
+  'ground_lawn_ic_ne':     { src: 'ground_lawn_ic_se',    flipH: false, flipV: true  },
+  'ground_lawn_ic_nw':     { src: 'ground_lawn_ic_se',    flipH: true,  flipV: true  },
+};
+
+function drawLawnTile(g, key, wx, wy) {
+  const flip = LAWN_FLIP[key];
+  const img  = getSprite(flip ? flip.src : key);
+  if (!img) return;
+  if (!flip) {
+    g.drawImage(img, 0, 0, TILE_W, TILE_H, wx, wy, TILE, TILE);
+    return;
+  }
+  g.save();
+  g.translate(wx + (flip.flipH ? TILE : 0), wy + (flip.flipV ? TILE : 0));
+  g.scale(flip.flipH ? -1 : 1, flip.flipV ? -1 : 1);
+  g.drawImage(img, 0, 0, TILE_W, TILE_H, 0, 0, TILE, TILE);
+  g.restore();
+}
 
 function lawnKey(wx, wy, v, zoneAtFn) {
   const mask = neighborMask(wx, wy, ZONE.LAWN, zoneAtFn);
@@ -125,8 +139,7 @@ export function drawAutotileEdges(g, wx0, wy0, zoneAtFn) {
       const key = lawnKey(wx, wy, v, zoneAtFn);
       if (key === 'ground_lawn_' + (v + 1)) continue;
 
-      const img = getSprite(key);
-      if (img) g.drawImage(img, 0, 0, TILE_W, TILE_H, wx, wy, TILE, TILE);
+      drawLawnTile(g, key, wx, wy);
     }
   }
 }
@@ -152,11 +165,8 @@ export function drawTiledGround(g, wx0, wy0, zoneAtFn) {
 
       if (zone === ZONE.LAWN) {
         const key = lawnKey(wx, wy, v, zoneAtFn);
-        const img = getSprite(key);
-        if (img) {
-          g.drawImage(img, 0, 0, TILE_W, TILE_H, wx, wy, TILE, TILE);
-          continue;
-        }
+        drawLawnTile(g, key, wx, wy);
+        continue;
       }
 
       const srcX = v * TILE_W;
