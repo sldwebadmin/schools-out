@@ -47,16 +47,20 @@ function diagMask(wx, wy, zone, zoneAtFn) {
 // ── LAWN autotile ────────────────────────────────────────────────────────
 //
 // ME Exteriors Grass_1 — only a subset of tiles exist on disk and they are
-// NOT symmetric pairs. Rather than use wrong-looking sprites, we derive all
-// directional variants by transforming the two canonical source sprites:
+// NOT symmetric pairs. Grass_1_8 (edge_w) is the one clean-looking edge.
+// All four edge directions and the symmetrically-paired corners are derived
+// from it via canvas rotation/flip so every side of every lawn looks the same.
 //
-//   ground_lawn_edge_w  (Grass_1_8)  — clean west-facing edge  ← canonical
-//   ground_lawn_edge_s  (Grass_1_18) — clean south-facing edge ← canonical
-//   ground_lawn_corner_ne (Grass_1_4) — NE outer corner        ← canonical
-//   ground_lawn_ic_se   (Grass_1_9)  — SE inner corner         ← canonical
+//   Canonical sources:
+//     ground_lawn_edge_w  (Grass_1_8)  — subtle shadow on left  ← single edge source
+//     ground_lawn_corner_ne (Grass_1_4) — NE outer corner        ← single corner source
+//     ground_lawn_ic_se   (Grass_1_9)  — SE inner corner         ← single ic source
 //
-// All other directions are obtained by flipH / flipV on the canonical sprite.
-// This produces a fully symmetric look on all four sides of every lawn patch.
+//   Rotation convention (rot degrees CW on screen):
+//     rot 0   → shadow stays on left  (edge_w)
+//     rot 90  → shadow moves to top   (edge_n: road to north)
+//     rot 270 → shadow moves to bottom (edge_s: road to south)
+//     flipH   → shadow moves to right (edge_e: road to east)
 
 const LAWN_MASK_KEY = {
    3: 'ground_lawn_corner_sw',  // N+E connected, SW exposed
@@ -69,31 +73,40 @@ const LAWN_MASK_KEY = {
   14: 'ground_lawn_edge_n',     // E+S+W, N exposed
 };
 
-// Derived tiles: {srcKey, flipH, flipV}.
-// When a key appears here, drawLawnTile draws srcKey with the given transform.
+// {src, rot, flipH, flipV} — rot and flip are mutually exclusive per entry.
 const LAWN_FLIP = {
-  'ground_lawn_edge_e':    { src: 'ground_lawn_edge_w',   flipH: true,  flipV: false },
-  'ground_lawn_edge_n':    { src: 'ground_lawn_edge_s',   flipH: false, flipV: true  },
-  'ground_lawn_corner_nw': { src: 'ground_lawn_corner_ne', flipH: true,  flipV: false },
-  'ground_lawn_corner_se': { src: 'ground_lawn_corner_ne', flipH: false, flipV: true  },
-  'ground_lawn_corner_sw': { src: 'ground_lawn_corner_ne', flipH: true,  flipV: true  },
-  'ground_lawn_ic_sw':     { src: 'ground_lawn_ic_se',    flipH: true,  flipV: false },
-  'ground_lawn_ic_ne':     { src: 'ground_lawn_ic_se',    flipH: false, flipV: true  },
-  'ground_lawn_ic_nw':     { src: 'ground_lawn_ic_se',    flipH: true,  flipV: true  },
+  'ground_lawn_edge_e':    { src: 'ground_lawn_edge_w',    rot: 0,   flipH: true,  flipV: false },
+  'ground_lawn_edge_n':    { src: 'ground_lawn_edge_w',    rot: 90,  flipH: false, flipV: false },
+  'ground_lawn_edge_s':    { src: 'ground_lawn_edge_w',    rot: 270, flipH: false, flipV: false },
+  'ground_lawn_corner_nw': { src: 'ground_lawn_corner_ne', rot: 0,   flipH: true,  flipV: false },
+  'ground_lawn_corner_se': { src: 'ground_lawn_corner_ne', rot: 0,   flipH: false, flipV: true  },
+  'ground_lawn_corner_sw': { src: 'ground_lawn_corner_ne', rot: 0,   flipH: true,  flipV: true  },
+  'ground_lawn_ic_sw':     { src: 'ground_lawn_ic_se',     rot: 0,   flipH: true,  flipV: false },
+  'ground_lawn_ic_ne':     { src: 'ground_lawn_ic_se',     rot: 0,   flipH: false, flipV: true  },
+  'ground_lawn_ic_nw':     { src: 'ground_lawn_ic_se',     rot: 0,   flipH: true,  flipV: true  },
 };
 
 function drawLawnTile(g, key, wx, wy) {
   const flip = LAWN_FLIP[key];
-  const img  = getSprite(flip ? flip.src : key);
-  if (!img) return;
   if (!flip) {
-    g.drawImage(img, 0, 0, TILE_W, TILE_H, wx, wy, TILE, TILE);
+    const img = getSprite(key);
+    if (img) g.drawImage(img, 0, 0, TILE_W, TILE_H, wx, wy, TILE, TILE);
     return;
   }
+  const img = getSprite(flip.src);
+  if (!img) return;
   g.save();
-  g.translate(wx + (flip.flipH ? TILE : 0), wy + (flip.flipV ? TILE : 0));
-  g.scale(flip.flipH ? -1 : 1, flip.flipV ? -1 : 1);
-  g.drawImage(img, 0, 0, TILE_W, TILE_H, 0, 0, TILE, TILE);
+  if (flip.rot) {
+    // rotate(π/2) CW on screen: left shadow → top    (edge_n)
+    // rotate(-π/2) CCW on screen: left shadow → bottom (edge_s)
+    if (flip.rot === 90)  { g.translate(wx + TILE, wy);        g.rotate( Math.PI / 2); }
+    if (flip.rot === 270) { g.translate(wx,        wy + TILE); g.rotate(-Math.PI / 2); }
+    g.drawImage(img, 0, 0, TILE_W, TILE_H, 0, 0, TILE, TILE);
+  } else {
+    g.translate(wx + (flip.flipH ? TILE : 0), wy + (flip.flipV ? TILE : 0));
+    g.scale(flip.flipH ? -1 : 1, flip.flipV ? -1 : 1);
+    g.drawImage(img, 0, 0, TILE_W, TILE_H, 0, 0, TILE, TILE);
+  }
   g.restore();
 }
 
