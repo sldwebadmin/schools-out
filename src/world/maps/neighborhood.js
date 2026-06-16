@@ -3,15 +3,18 @@
 // Section size: 2560 × 2560 px.
 //
 // Road layout:
-//   Maple Ave (main N-S, 128px): x=1216..1344  — centered on map (x=2560/2)
+//   Maple Ave (main N-S, 128px): x=1216..1344  — centered on map (x center=1280)
 //
 //   LEFT-SIDE ONLY (x=0..1216):
-//   Oak Ave  (E-W, 140px): y=1210..1350  — centered on map (y=2560/2)
-//   Court Dr (E-W, 128px): y=1700..1828  — temp position, TBD
-//   Birch Ave(E-W, 140px): y=2300..2440  — temp position, TBD
+//   Oak Ave  (E-W, 128px): y=1216..1344  — centered on map (y center=1280)
+//   Court Dr (E-W, 128px): y=1696..1824  — temp position, TBD
+//   Birch Ave(E-W, 128px): y=2304..2432  — temp position, TBD
 //
 //   RIGHT-SIDE ONLY (x=1344..2560):
-//   Oak Ave  (E-W, 140px): y=1210..1350  — continues east from Maple (4-way)
+//   Oak Ave  (E-W, 128px): y=1216..1344  — continues east from Maple (4-way)
+//
+// All road widths and sidewalk widths are multiples of TILE=32 so every
+// zone boundary falls on a tile edge — required for clean autotile rendering.
 
 import { CHUNK_W, DAY_SEED } from '../../engine/constants.js';
 import { mulberry32, bakeCanvas } from '../../engine/utils.js';
@@ -19,11 +22,11 @@ import { ZONE } from '../tiledata.js';
 import { drawTiledGround, drawAutotileEdges } from '../tilerender.js';
 
 // ── Road constants (local coords) ─────────────────────────────────────────
-const MNS_X=1216, MNS_W=128;  // Maple Ave N-S — centered: 2560/2 − 128/2
-const OAK_Y=1210, OAK_W=140;  // Oak Ave E-W  — centered: 2560/2 − 140/2
-const MEW_Y=1700, MEW_W=128;  // Court Dr E-W  — left side only (temp position)
-const BIR_Y=2300, BIR_W=140;  // Birch Ave E-W — left side only (temp position)
-const SW=28;                   // sidewalk strip width
+const MNS_X=1216, MNS_W=128;  // Maple Ave N-S — center x=1280
+const OAK_Y=1216, OAK_W=128;  // Oak Ave E-W   — center y=1280
+const MEW_Y=1696, MEW_W=128;  // Court Dr E-W  — left side only (temp position)
+const BIR_Y=2304, BIR_W=128;  // Birch Ave E-W — left side only (temp position)
+const SW=32;                   // sidewalk strip width (= TILE; keeps all edges grid-aligned)
 
 // ── Zone function ─────────────────────────────────────────────────────────
 function zoneAt(lx, ly) {
@@ -105,26 +108,26 @@ function bakeInto(g, lx0, ly0) {
 
   // ── Center-line dashes ────────────────────────────────────────────────────
   g.fillStyle="#8d80b8";
-  for(let y=4;     y<2560; y+=64)  g.fillRect(MNS_X+60,   y,  8, 28);  // Maple Ave
-  for(let x=4;     x<MNS_X; x+=64) g.fillRect(x, OAK_Y+66, 28,  8);   // Oak left
-  for(let x=MNS_X+MNS_W; x<2560; x+=64) g.fillRect(x, OAK_Y+66, 28, 8); // Oak right
-  for(let x=4;     x<MNS_X; x+=64) g.fillRect(x, MEW_Y+60, 28,  8);   // Court Dr
-  for(let x=4;     x<MNS_X; x+=64) g.fillRect(x, BIR_Y+66, 28,  8);   // Birch Ave
+  for(let y=4;     y<2560; y+=64)  g.fillRect(MNS_X+60,   y,  8, 28);   // Maple Ave
+  for(let x=4;     x<MNS_X; x+=64) g.fillRect(x, OAK_Y+60, 28,  8);    // Oak left
+  for(let x=MNS_X+MNS_W; x<2560; x+=64) g.fillRect(x, OAK_Y+60, 28, 8); // Oak right
+  for(let x=4;     x<MNS_X; x+=64) g.fillRect(x, MEW_Y+60, 28,  8);    // Court Dr
+  for(let x=4;     x<MNS_X; x+=64) g.fillRect(x, BIR_Y+60, 28,  8);    // Birch Ave
 
   // ── Crosswalk marks ───────────────────────────────────────────────────────
   g.fillStyle="#cfc6e8";
-  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, OAK_Y+40, 12, 60);  // Maple×Oak
-  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, MEW_Y+40, 12, 60);  // Maple×Court
-  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, BIR_Y+40, 12, 60);  // Maple×Birch
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, OAK_Y+34, 12, 60);  // Maple×Oak
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, MEW_Y+34, 12, 60);  // Maple×Court
+  for(let i=0;i<6;i++) g.fillRect(MNS_X+10+i*22, BIR_Y+34, 12, 60);  // Maple×Birch
 
   // ── Manhole covers ────────────────────────────────────────────────────────
   for(const [mx,my] of [
     [MNS_X+64,  300], [MNS_X+64,  900],
-    [MNS_X+64, 1600], [MNS_X+64, 2200],  // Maple Ave
-    [200, OAK_Y+70], [600, OAK_Y+70], [900, OAK_Y+70],  // Oak left
-    [1600, OAK_Y+70],[1900, OAK_Y+70],[2200, OAK_Y+70],  // Oak right
-    [200, MEW_Y+64], [600, MEW_Y+64], [900, MEW_Y+64],   // Court Dr
-    [200, BIR_Y+70], [600, BIR_Y+70], [900, BIR_Y+70],   // Birch Ave
+    [MNS_X+64, 1580], [MNS_X+64, 2200],  // Maple Ave
+    [200, OAK_Y+64], [600, OAK_Y+64], [900, OAK_Y+64],   // Oak left
+    [1600, OAK_Y+64],[1900, OAK_Y+64],[2200, OAK_Y+64],   // Oak right
+    [200, MEW_Y+64], [600, MEW_Y+64], [900, MEW_Y+64],    // Court Dr
+    [200, BIR_Y+64], [600, BIR_Y+64], [900, BIR_Y+64],    // Birch Ave
   ]){
     g.fillStyle="#2e294a"; g.beginPath(); g.arc(mx,my,11,0,7); g.fill();
     g.strokeStyle="#55517a"; g.lineWidth=3; g.beginPath(); g.arc(mx,my,7,0,7); g.stroke();
@@ -148,8 +151,8 @@ function bakeInto(g, lx0, ly0) {
     g.restore();
   }
   const MNS_CX = MNS_X+64;
-  const OAK_CY = OAK_Y+70, MEW_CY = MEW_Y+64, BIR_CY = BIR_Y+70;
-  for(const y of [300, 900, 1600, 2200]) { label('Maple Ave', MNS_CX, y, true); }
+  const OAK_CY = OAK_Y+64, MEW_CY = MEW_Y+64, BIR_CY = BIR_Y+64;
+  for(const y of [300, 900, 1580, 2200]) { label('Maple Ave', MNS_CX, y, true); }
   for(const x of [200, 700])             { label('Oak Ave',   x, OAK_CY, false); }
   for(const x of [1600, 2100])           { label('Oak Ave',   x, OAK_CY, false); }
   for(const x of [200, 700])             { label('Court Dr',  x, MEW_CY, false); }
