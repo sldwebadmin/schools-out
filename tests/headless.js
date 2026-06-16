@@ -242,6 +242,27 @@ try {
   errors.push('Runtime error: ' + e.message + '\n' + (e.stack || ''));
 }
 
+/* ── Neighborhood zone data (loaded from Tiled JSON) ────────────────── */
+try {
+  const { ZONE } = await import('../src/world/tiledata.js');
+  const { zoneAt } = await import('../src/world/neighborhoodLoader.js');
+  // Maple Ave centre x=2816 should be ROAD at any y
+  const mapleZone = zoneAt(2816, 500);
+  if (mapleZone !== ZONE.ROAD)
+    errors.push(`Zone data: Maple Ave (x=2816) expected ROAD(${ZONE.ROAD}), got ${mapleZone}`);
+  else console.log(`Zone data: OK — Maple Ave = ROAD, Oak sidewalk = SIDEWALK`);
+  // Oak Ave sidewalk north edge y=1408 should be SIDEWALK on the right side
+  const swZone = zoneAt(3000, 1408);
+  if (swZone !== ZONE.SIDEWALK)
+    errors.push(`Zone data: Oak sidewalk (3000,1408) expected SIDEWALK(${ZONE.SIDEWALK}), got ${swZone}`);
+  // Lawn check
+  const lawnZone = zoneAt(400, 400);
+  if (lawnZone !== ZONE.LAWN)
+    errors.push(`Zone data: open lot (400,400) expected LAWN(${ZONE.LAWN}), got ${lawnZone}`);
+} catch(e) {
+  errors.push('Zone data load error: ' + e.message + '\n' + (e.stack || ''));
+}
+
 /* ── Module file structure ───────────────────────────────────────── */
 const required = [
   'index.html', 'styles.css', 'src/main.js',
@@ -251,8 +272,10 @@ const required = [
   'src/audio/synth.js',
   'src/world/map.js', 'src/world/bake.js', 'src/world/minimap.js',
   'src/world/maps/neighborhood.js', 'src/world/maps/index.js',
+  'src/world/neighborhoodLoader.js',
   'src/world/chunks.js', 'src/world/tiledata.js', 'src/world/interiorMaps.js',
   'src/world/tilecache.js', 'src/world/tilerender.js',
+  'public/neighborhood.json', 'public/neighborhood.tsx',
   'src/entities/npcs.js', 'src/entities/pickups.js',
   'src/entities/player.js', 'src/entities/dog.js',
   'src/render/draw.js', 'src/render/props.js', 'src/render/buildsprites.js',

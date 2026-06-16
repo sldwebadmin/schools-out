@@ -1,107 +1,144 @@
-# TILED_GUIDE.md — Editing the School's Out map in Tiled
+# TILED_GUIDE.md — Editing the Neighborhood in Tiled
 
-This guide explains how to open the world map in Tiled, move something, and see it reflected in the game. Written for non-developers.
-
----
-
-## What Tiled is (quick version)
-
-[Tiled](https://mapeditor.org) is a free map editor for games. Our world is stored in `public/map.json` — Tiled can open that file and show you every wall, tree, lamp, and pickup as a coloured object you can drag around. When you save your changes and regenerate, the game reflects them.
+This is your map editor workflow. The neighborhood (`public/neighborhood.json`) is now the single source of truth. Edit it in Tiled, save, refresh the browser — your changes appear immediately.
 
 ---
 
 ## 1 — Install Tiled
 
-1. Go to **https://mapeditor.org** and click **Download**.
-2. Install normally (Windows installer or zip).
-3. Open Tiled. You should see an empty workspace.
+Go to **https://www.mapeditor.org** → Download. Install as normal. Open it once to confirm it works.
 
 ---
 
-## 2 — Open the map
+## 2 — Open the neighborhood map
 
-1. In Tiled choose **File → Open File or Project…**
-2. Navigate to your project folder and open `public/map.json`.
-3. Tiled loads the map. You'll see a 4000×3000 world with coloured tiles (the ground) and coloured rectangles/dots on top (walls, trees, lamps, pickups).
+1. In Tiled: **File → Open File or Project…**
+2. Navigate to your `SchoolsOut` folder, then into `public/`, and open **`neighborhood.json`**.
+3. Tiled loads the map. You'll see a 5632 × 3072 world (176 × 96 tiles at 32 px each).
 
-### The layers (left panel)
+> **Tip:** Tiled will ask for the tileset when you first open. It should find `neighborhood.tsx` automatically — if not, point it to `public/neighborhood.tsx`.
 
-| Layer | Colour | Contains |
-|-------|--------|----------|
-| `ground` | — | 32×32 zone tiles (meadow, forest, road, etc.) |
-| `walls` | red | Collision rectangles — houses, fences, hedges, signs |
-| `canopies` | teal | Tree canopy ellipses (drawn above everything) |
-| `lamps` | gold | Street lamp positions |
-| `objects` | gold | Popsicle and bike pickup spots |
+---
+
+## 3 — What you're looking at
+
+### Ground layer (`ground`)
+
+The ground is painted with ME terrain tiles. What you see is close to what the game renders:
+
+| Tile colour | Means |
+|-------------|-------|
+| Green       | Lawn (grass) |
+| Dark purple | Road |
+| Medium purple | Sidewalk |
+
+The game engine adds edge-transition tiles automatically at zone boundaries, so you don't need to paint those corners yourself.
+
+### Objects layer (`objects`)
+
+Everything that isn't ground is an **object** on this layer:
+
+| Class | What it is |
+|-------|-----------|
+| `wall` (type=house) | A building — property `hue` sets which sprite |
+| `wall` (type=fence) | A fence segment — `hop:true` means the player can jump over it |
+| `lamp` | Street lamp position (point) |
+| `door` | Doorway that takes the player into an interior |
+| `transition` | Map boundary (locks the player out with a "Coming soon!" message) |
+| `pickup` | Where a popsicle/pickup spawns (point) |
 
 Click the eye icon next to a layer to show/hide it.
 
 ---
 
-## 3 — Move a tree (example walkthrough)
+## 4 — Move a building (example walkthrough)
 
-1. In the Layers panel, click **canopies** to select that layer.
-2. In the toolbar, choose the **Select Objects** tool (arrow icon, shortcut `S`).
-3. Click on any teal ellipse to select a tree canopy.
-4. Drag it to a new spot, or type exact coordinates in the Properties panel (bottom-left).
-5. Press **Ctrl+S** to save `map.json`.
-
-> **Note:** The canopy is just the visual shadow/leaf circle. The trunk (collision box) is a rectangle in the `walls` layer with class `tree`. Move both to move a whole tree.
-
----
-
-## 4 — See your change in the game
-
-The game reads world data from source files. To apply your Tiled edits you currently need to update the source. The workflow will be automated in a future update — for now, **ask the developer** (Claude Code) to import your edited map.json.
-
-If you just want to preview the ground-zone layout changes, the `ground` tile layer is informational only — the actual ground art is generated procedurally in the same zones, so moving a tile there won't change the art (yet). Moving walls/trees/canopies is what moves visible objects.
+1. Click the **objects** layer in the Layers panel (right side).
+2. Press **S** (Select Objects tool).
+3. Click on a house rectangle — it highlights in blue.
+4. Drag it to a new position, or type exact coordinates in the Properties panel.
+5. Press **Ctrl+S** to save.
+6. Switch back to the browser running `npm run dev` and press **F5** — your building moved.
 
 ---
 
-## 5 — Reference: zone colours in the tile layer
+## 5 — Paint a new zone (example: extend a road)
 
-The `ground` layer uses solid-colour tiles from `public/tileset.png` to show which zone each 32×32 cell belongs to. These are only for reference in Tiled; the actual rendered art is richer.
+1. Click the **ground** layer.
+2. Press **T** (Stamp Brush tool).
+3. In the **Tilesets** panel, click the road tile (dark purple).
+4. Click/drag on the map to paint road cells.
+5. **Ctrl+S** → **F5** in the browser to see the result.
 
-| Tile # | Zone | Colour |
-|--------|------|--------|
-| 1 | Wild meadow | dark green |
-| 2 | Forest floor | very dark green |
-| 3 | Neighbourhood lawn | medium green |
-| 4 | School grounds | lighter green |
-| 5 | Blacktop | blue-purple |
-| 6 | Sandbox | tan/yellow |
-| 7 | Road | dark purple |
-| 8 | Sidewalk | medium purple |
-| 9 | Dirt path | brown |
-| 10 | Pond | blue |
-| 11 | Community garden | dark brown |
-| 12 | Basketball court | dark blue-purple |
-| 13 | Market plaza | very dark purple |
+The grass-to-road edge transitions (the subtle shadowed border where grass meets pavement) are generated automatically by the game engine at chunk-bake time, so you'll only see them in-game, not in Tiled.
 
 ---
 
-## 6 — Regenerating the map after code changes
+## 6 — Add a new object
 
-If a developer edits the wall layout in `src/world/map.js` (adding a new house, etc.), they regenerate the map with:
+### New fence segment
+
+1. Click the **objects** layer.
+2. Press **R** (Insert Rectangle).
+3. Draw the rectangle where you want the fence.
+4. In the **Properties** panel, set:
+   - **Class** → `wall`
+   - Add custom property `type` (string) → `fence`
+   - Add custom property `hop` (bool) → `true` (player can jump over)
+5. **Ctrl+S** → **F5**.
+
+### New pickup spot
+
+1. Click the **objects** layer.
+2. Press **I** (Insert Point) — top toolbar.
+3. Click the spot on the map.
+4. Set **Class** → `pickup`.
+5. **Ctrl+S** → **F5**.
+
+---
+
+## 7 — See changes live (dev) vs. deployed
+
+| Workflow | How |
+|----------|-----|
+| `npm run dev` (local) | Edit in Tiled → save → **F5** in browser. Instant. |
+| Deployed to GitHub Pages | After saving, run `git add public/neighborhood.json && git commit -m "Update neighborhood map" && git push`. The live URL updates in ~1 min. |
+
+---
+
+## 8 — House sprite colours (hue reference)
+
+The `hue` property on a house wall tells the engine which sprite to draw:
+
+| `hue` value | Sprite |
+|-------------|--------|
+| `#6b4a76`  | Country House (no banisters) — purple-lot |
+| `#3a6e7a`  | Modern House — teal-lot |
+| `#7a6e3a`  | Japanese House — olive-lot |
+| `#7a5c34`  | Villa 1 (brown roof) |
+| `#8b3a2a`  | Villa 3 (red roof) |
+| `#2a5a8b`  | Villa 4 (blue roof) |
+
+---
+
+## 9 — What NOT to edit in Tiled
+
+| Thing | Where it really lives | How to change it |
+|-------|-----------------------|------------------|
+| Goal ring position | `src/engine/constants.js` `GOAL` | Edit constants.js |
+| Player spawn point | `src/engine/constants.js` `SPAWN` | Edit constants.js |
+| Dog nap spots | `src/engine/constants.js` `NAPS` | Edit constants.js |
+| Road stripe/crosswalk/manhole art | `src/world/neighborhoodLoader.js` `bakeInto()` | Edit the JS code |
+| Interior house layout | `src/world/interiorMaps.js` | Edit the JS code |
+
+---
+
+## 10 — Regenerating from scratch (nuclear option)
+
+The export script `scripts/gen-neighborhood.mjs` re-generates `public/neighborhood.json` from the hardcoded constants in the script. **This will overwrite your Tiled edits.** Only use it if you want to start fresh from the code baseline:
 
 ```
-npm run gen-all
+node scripts/gen-neighborhood.mjs --force
 ```
 
-This rewrites `public/tileset.png` and `public/map.json`. Open Tiled and reload the file to see the update.
-
----
-
-## Frequently asked questions
-
-**Can I add a new tree?**
-Yes — duplicate an existing `walls` rectangle with type `tree` and a `canopies` ellipse, then ask the developer to import your map.json.
-
-**Can I move the goal ring?**
-The goal ring is a game mechanic constant (`GOAL` in `src/engine/constants.js`). It's not in the map — ask the developer to move it.
-
-**Will my edits survive a `npm run gen-map`?**
-No — `gen-map` overwrites `public/map.json` from source code. Always tell the developer about map edits you want kept so they can add them to `map.js`.
-
-**What's next?**
-A future update will let the game load walls directly from `map.json`, so Tiled edits flow into the game without code changes. For now the JSON is the design reference and Tiled is the visual editor.
+You almost never need this. Edit in Tiled instead.
