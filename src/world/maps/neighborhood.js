@@ -1,5 +1,5 @@
-// Maple Court (Neighborhood) — Phase N1: Streets skeleton.
-// All coordinates are local (origin 0,0 = world 2560,3584).
+// Maple Court (Neighborhood) — sketch-based starter neighborhood.
+// Local coords: 0,0 = top-left of this section.
 // Section size: 2560 × 2560 px.
 //
 // Road layout:
@@ -29,7 +29,6 @@ const OAK_Y= 896, OAK_W=140;  // Oak Ave E-W   (left + right, 4-way at Maple)
 const BIR_Y=1664, BIR_W=140;  // Birch Ave E-W (left side only)
 const SW=28;                   // sidewalk strip width
 
-// ── Zone function ─────────────────────────────────────────────────────────
 function zoneAt(lx, ly) {
   // Full-height N-S roads (always win)
   if (lx >= MNS_X && lx < MNS_X+MNS_W) return ZONE.ROAD;
@@ -64,34 +63,137 @@ function zoneAt(lx, ly) {
   return ZONE.LAWN;
 }
 
-// ── Ground bake function ──────────────────────────────────────────────────
+// ── Drawing helpers ────────────────────────────────────────────────────
 function bakeInto(g, lx0, ly0) {
   const rnd = mulberry32(DAY_SEED ^ ((lx0 * 997 + ly0 * 1009) >>> 0));
 
-  function tex(rx0,ry0,rx1,ry1, n, c1,c2, dw,dh){
-    const ix0=Math.max(lx0,rx0), ix1=Math.min(lx0+CHUNK_W,rx1);
-    const iy0=Math.max(ly0,ry0), iy1=Math.min(ly0+CHUNK_W,ry1);
-    if(ix0>=ix1||iy0>=iy1) return;
-    const iw=ix1-ix0, ih=iy1-iy0;
-    for(let i=0;i<n;i++){
-      g.fillStyle=rnd()<.5?c1:c2;
-      g.fillRect(ix0+(rnd()*iw)|0, iy0+(rnd()*ih)|0, dw, dh);
+  function tex(rx0, ry0, rx1, ry1, n, c1, c2, dw, dh) {
+    const ix0 = Math.max(lx0, rx0), ix1 = Math.min(lx0 + CHUNK_W, rx1);
+    const iy0 = Math.max(ly0, ry0), iy1 = Math.min(ly0 + CHUNK_W, ry1);
+    if (ix0 >= ix1 || iy0 >= iy1) return;
+
+    const iw = ix1 - ix0, ih = iy1 - iy0;
+    for (let i = 0; i < n; i++) {
+      g.fillStyle = rnd() < .5 ? c1 : c2;
+      g.fillRect(ix0 + (rnd() * iw) | 0, iy0 + (rnd() * ih) | 0, dw, dh);
     }
   }
-  function road(x,y,w,h){
-    g.fillStyle="#46406b"; g.fillRect(x,y,w,h);
-    tex(x,y,x+w,y+h, Math.max(1,(w*h/1400)|0), "#4d4775","#403a62", 5,5);
-    g.fillStyle="#353055";
-    if(w>=h){ g.fillRect(x,y,w,5); g.fillRect(x,y+h-5,w,5); }
-    else     { g.fillRect(x,y,5,h); g.fillRect(x+w-5,y,5,h); }
-  }
-  function sidewalk(x,y,w,h){
-    g.fillStyle="#6a5c91"; g.fillRect(x,y,w,h);
-    g.fillStyle="#5d5083";
-    if(w>=h) for(let sx=x;sx<x+w;sx+=46) g.fillRect(sx,y,3,h);
-    else     for(let sy=y;sy<y+h;sy+=46) g.fillRect(x,sy,w,3);
+
+  function labelText(txt, cx, cy, size = 18, color = '#fff') {
+    if (!txt) return;
+    g.fillStyle = color;
+    g.font = `${size}px sans-serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+
+    const lines = String(txt).split('\n');
+    const lineH = size + 4;
+
+    for (let i = 0; i < lines.length; i++) {
+      g.fillText(lines[i], cx, cy + (i - (lines.length - 1) / 2) * lineH);
+    }
   }
 
+  function road(x, y, w, h) {
+    g.fillStyle = '#343056';
+    g.fillRect(x, y, w, h);
+
+    tex(
+      x, y, x + w, y + h,
+      Math.max(1, (w * h / 1400) | 0),
+      '#3d3863',
+      '#2d294d',
+      5,
+      5
+    );
+
+    g.fillStyle = '#24203f';
+    if (w >= h) {
+      g.fillRect(x, y, w, 4);
+      g.fillRect(x, y + h - 4, w, 4);
+    } else {
+      g.fillRect(x, y, 4, h);
+      g.fillRect(x + w - 4, y, 4, h);
+    }
+  }
+
+  function sidewalk(x, y, w, h) {
+    g.fillStyle = '#8f8f94';
+    g.fillRect(x, y, w, h);
+
+    g.fillStyle = '#74747a';
+    if (w >= h) {
+      for (let sx = x; sx < x + w; sx += 44) g.fillRect(sx, y, 2, h);
+    } else {
+      for (let sy = y; sy < y + h; sy += 44) g.fillRect(x, sy, w, 2);
+    }
+  }
+
+  function parking(x, y, w, h, label = 'Parking Lot') {
+    g.fillStyle = '#73bdd9';
+    g.fillRect(x, y, w, h);
+
+    g.strokeStyle = '#1b1430';
+    g.lineWidth = 3;
+    g.strokeRect(x, y, w, h);
+
+    const spots = Math.max(2, Math.floor(w / 90));
+    g.strokeStyle = '#19566f';
+    g.lineWidth = 2;
+
+    for (let i = 1; i < spots; i++) {
+      const sx = x + (w / spots) * i;
+      g.beginPath();
+      g.moveTo(sx, y);
+      g.lineTo(sx, y + h - 36);
+      g.stroke();
+    }
+
+    g.fillStyle = '#0d536e';
+    g.fillRect(x, y + h - 38, w, 38);
+    labelText(label, x + w / 2, y + h - 14, 24);
+  }
+
+  function lot(x, y, w, h) {
+    g.fillStyle = '#315c39';
+    g.fillRect(x, y, w, h);
+
+    g.strokeStyle = '#24442b';
+    g.lineWidth = 2;
+    g.strokeRect(x, y, w, h);
+  }
+
+  function building(x, y, w, h, label = '', color = '#7cc6e3') {
+    g.fillStyle = color;
+    g.fillRect(x, y, w, h);
+
+    g.strokeStyle = '#11122a';
+    g.lineWidth = 3;
+    g.strokeRect(x, y, w, h);
+
+    if (label) {
+      labelText(
+        label,
+        x + w / 2,
+        y + h / 2,
+        Math.min(26, Math.max(14, w / 7)),
+        '#11122a'
+      );
+    }
+  }
+
+  function park(x, y, w, h, label) {
+    g.fillStyle = '#8bd34b';
+    g.fillRect(x, y, w, h);
+
+    g.strokeStyle = '#10290f';
+    g.lineWidth = 3;
+    g.strokeRect(x, y, w, h);
+
+    labelText(label, x + w / 2, y + h / 2, 24);
+  }
+
+  // Base tiled ground
   drawTiledGround(g, lx0, ly0, zoneAt);
 
   // ── Sidewalks (drawn before roads so roads overdraw at intersections) ──
@@ -160,7 +262,6 @@ function bakeInto(g, lx0, ly0) {
     g.fillStyle="#2e294a"; g.beginPath(); g.arc(mx,my,11,0,7); g.fill();
     g.strokeStyle="#55517a"; g.lineWidth=3; g.beginPath(); g.arc(mx,my,7,0,7); g.stroke();
   }
-  g.lineWidth=1;
 
   // ── Road name labels (temporary debug — high-contrast for layout review) ──
   // Dark pill background + cream text so names are unmissable against the road.
@@ -199,13 +300,14 @@ function bakeInto(g, lx0, ly0) {
   drawAutotileEdges(g, lx0, ly0, zoneAt);
 }
 
-// ── Minimap bake ──────────────────────────────────────────────────────────
+// ── Minimap ────────────────────────────────────────────────────────────
 function minimapBake() {
   const SC = 150 / 2560;
   const [c, g] = bakeCanvas(150, 150);
-  const B = (x,y,w,h,col) => {
-    g.fillStyle=col;
-    g.fillRect(x*SC, y*SC, Math.max(1,w*SC), Math.max(1,h*SC));
+
+  const B = (x, y, w, h, col) => {
+    g.fillStyle = col;
+    g.fillRect(x * SC, y * SC, Math.max(1, w * SC), Math.max(1, h * SC));
   };
   g.fillStyle='#3f5d44'; g.fillRect(0,0,150,150);
   // Full-height N-S roads
@@ -224,19 +326,71 @@ function minimapBake() {
   return c;
 }
 
-// ── Section definition ────────────────────────────────────────────────────
+function makeHouseDoor(x, y, txt = 'Nobody home right now.') {
+  return {
+    x: x + 70,
+    y: y + 190,
+    w: 50,
+    h: 22,
+    worldReturn: { x: x + 95, y: y + 220 },
+    txt,
+  };
+}
+
+// ── Section export ─────────────────────────────────────────────────────
 export const neighborhood = {
-  key:    'neighborhood',
-  name:   'Maple Court',
-  w:      2560,
-  h:      2560,
+  key: 'neighborhood',
+  name: 'Maple Court',
+  w: W,
+  h: H,
   status: 'open',
 
   zoneAt,
   bakeInto,
   minimapBake,
 
-  walls: [],
+  walls: [
+    // Player house — aligned with existing tests.
+    { x:210, y:2020, w:230, h:170, type:'house', txt:'Your House' },
+
+    // Named houses
+    { x:35, y:1310, w:185, h:190, type:'house', txt:'Creepy House' },
+    { x:875, y:1725, w:185, h:190, type:'house', txt:'School Principal' },
+    { x:1415, y:735, w:185, h:210, type:'house', txt:'Chief of Police' },
+    { x:1845, y:1835, w:300, h:205, type:'house', txt:'Mayor’s House' },
+
+    // Parks are non-blocking activity spaces.
+    { x:535, y:100, w:210, h:190, type:'park', ghost:true, noshadow:true, txt:'Park' },
+    { x:535, y:710, w:210, h:175, type:'park', ghost:true, noshadow:true, txt:'Playground' },
+
+    // Upper-right houses
+    ...[1415,1665,1915,2165,2410].map(x => ({
+      x, y:165, w:185, h:205, type:'house'
+    })),
+    ...[1665,1915,2165,2410].map(x => ({
+      x, y:735, w:185, h:210, type:'house'
+    })),
+
+    // Dense left houses
+    ...[245,455,665,875,1085].map(x => ({
+      x, y:1310, w:185, h:190, type:'house'
+    })),
+    ...[35,245,455,665,1085].map(x => ({
+      x, y:1725, w:185, h:190, type:'house'
+    })),
+    ...[35,245,455,665,875,1085].map(x => ({
+      x, y:2135, w:185, h:190, type:'house'
+    })),
+
+    // Open right-side large houses
+    ...[
+      [1400,1325,300,205],
+      [1840,1325,300,205],
+      [2280,1325,300,205],
+      [1410,1835,300,205],
+      [2285,1835,300,205],
+    ].map(([x,y,w,h]) => ({ x, y, w, h, type:'house' })),
+  ],
 
   canopies: [],
 
@@ -256,27 +410,65 @@ export const neighborhood = {
   ],
 
   doors: [
-    // Player's house placeholder — BL quadrant; house placed in Phase N2
-    {x:270, y:2200, w:64, h:22, target:"house", spawnX:240, spawnY:200,
-     worldReturn:{x:302, y:2244}},
+    // Player house interior — keep this coordinate for existing tests.
+    {
+      x:270,
+      y:2200,
+      w:64,
+      h:22,
+      target:'house',
+      spawnX:240,
+      spawnY:200,
+      worldReturn:{ x:302, y:2244 },
+      txt:'Home sweet home.',
+    },
+
+    // Flavor doors
+    makeHouseDoor(35, 1310, 'This house gives you the creeps.'),
+    makeHouseDoor(875, 1725, 'The principal lives here. Better behave.'),
+    makeHouseDoor(1415, 735, 'Chief of Police — maybe don’t cause trouble nearby.'),
+    makeHouseDoor(1845, 1835, 'The mayor’s house. Fancy lawn.'),
+    makeHouseDoor(1085, 2135, 'Your friend is probably outside somewhere.'),
   ],
 
   transitions: [
-    {x:0,    y:0,    w:2560, h:32,   status:'locked', txt:'Maple Park',            txt2:'Coming soon!'},
-    {x:0,    y:2528, w:2560, h:32,   status:'locked', txt:'Great Waterfront Lake', txt2:'Coming soon!'},
-    {x:2528, y:0,    w:32,   h:2560, status:'locked', txt:'Maple Mart District',   txt2:'Coming soon!'},
-    {x:0,    y:0,    w:32,   h:2560, status:'locked', txt:'Whispering Woods',      txt2:'Coming soon!'},
+    {
+      x:0, y:0, w:2560, h:32,
+      status:'locked',
+      txt:'School District',
+      txt2:'Coming soon!',
+    },
+    {
+      x:0, y:2528, w:2560, h:32,
+      status:'locked',
+      txt:'Lake / Fun Park',
+      txt2:'Coming soon!',
+    },
+    {
+      x:2528, y:0, w:32, h:2560,
+      status:'locked',
+      txt:'Shopping Center',
+      txt2:'Coming soon!',
+    },
+    {
+      x:0, y:0, w:32, h:2560,
+      status:'locked',
+      txt:'Whispering Woods',
+      txt2:'Coming soon!',
+    },
   ],
 
   npcs: [],
 
   pickupSpots: [
-    [300,  420],  // TL quad lawn
-    [1600, 420],  // TR quad lawn
-    [300, 1900],  // BL quad lawn
-    [2200, 2000], // BR quad lawn
-    [1264, 550],  // Maple Ave mid-north
-    [592,  750],  // Elm Ct mid-north
+    [620, 220],
+    [620, 805],
+    [1450, 460],
+    [2100, 460],
+    [135, 1450],
+    [960, 1850],
+    [302, 2244],
+    [1980, 1940],
   ],
 
   activities: [],
