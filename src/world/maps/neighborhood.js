@@ -259,7 +259,7 @@ function bakeInto(g, lx0, ly0) {
   }
 
   // Player house — placed to align with existing tests.
-  building(210, 2020, 230, 200, 'Your\nHouse', '#8ecae6');
+  building(210, 2020, 230, 170, 'Your\nHouse', '#8ecae6');
 
   // Open right-side larger lots / mayor area
   for (const [x, y, w, h, label] of [
@@ -379,7 +379,7 @@ export const neighborhood = {
 
   walls: [
     // Player house — aligned with existing tests.
-    { x:210, y:2020, w:230, h:200, type:'house', txt:'Your House' },
+    { x:210, y:2020, w:230, h:170, type:'house', txt:'Your House' },
 
     // Named houses
     { x:35, y:1310, w:185, h:190, type:'house', txt:'Creepy House' },
